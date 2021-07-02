@@ -13,7 +13,7 @@ logging.config.fileConfig(fname=LOGGING_CONF)
 logger = logging.getLogger(__name__)
 
 class MQTTClient(Subject):
-    """Classe que representa um Client MQTT para Consumer mensagens de um tópico.
+    """Classe que representa um Client MQTT para consumir as mensagens de um tópico.
        foi construido utilizando a implementação de Client Subscribe da biblioteca paho.
 
     Args:
