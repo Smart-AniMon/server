@@ -2,8 +2,8 @@
 Módulo com definições para o cliente de fila de mensagem MQTT.
 """
 
-from interfaces import Subject
-from utils import ReturnCodesMQTT
+from .interfaces import Subject
+from .utils import ReturnCodesMQTT
 from settings import MQTT_BROKER, LOGGING_CONF
 from paho.mqtt import client as mqtt_client
 
@@ -21,7 +21,8 @@ class MQTTClient(Subject):
     """
 
     def __init__(self):
-
+        super().__init__()
+        logger.debug("Starting MQTTClient")
         self.__host = MQTT_BROKER['HOST']
         self.__port = MQTT_BROKER['PORT']
         self.__user = MQTT_BROKER['USER']
@@ -44,7 +45,7 @@ class MQTTClient(Subject):
             raise
         else:
             try:
-                logger.info("Iniciando ClientMQTT")
+                logger.info("Starting ClientMQTT")
                 self.__consumer.loop_forever()
             except KeyboardInterrupt:
                 logger.error("Exit")
@@ -70,9 +71,9 @@ class MQTTClient(Subject):
         logger.debug("client = %s" % client)
         logger.debug("userdate = %s" % userdata)
         logger.debug("msg = %s" % msg.payload.decode())
-        logger.info("Message received")
+        logger.info("Message received from broker")
         #TO DO - Chamar updates de Observers
-        logger.info("TODO - Call Observers update")
+        self.notify_all(msg.payload.decode())
 
 
 
