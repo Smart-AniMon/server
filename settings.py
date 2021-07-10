@@ -11,7 +11,6 @@ else:
 
 
 ## Configurar informações de conexão com o broker.
-
 MQTT_BROKER = {
 	'HOST' : 'IP ou FQDN do broker',
 	'PORT' : Porta_do_broker,
@@ -21,7 +20,7 @@ MQTT_BROKER = {
 	'CLIENT_NAME': "client_name"
 }
 
-# Configuração de chave para acessar API Vision (Google)
+# Configurar arquivo com chave para acessar API Vision (Google)
 # https://cloud.google.com/vision/docs/quickstart-client-libraries#client-libraries-install-python
 
 if PRODUCTION:

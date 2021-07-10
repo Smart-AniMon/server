@@ -16,6 +16,7 @@ class Observer(object):
         pass
 
     def update(self, message: object) -> None:
+        logger.info("Message Received from Subject")
         raise Exception("NotImplementedException")
 
 

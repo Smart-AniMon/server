@@ -31,12 +31,10 @@ class CloudVisionClient(Observer):
         self.__image_content = "" # imagem em bytes sem estar codificada em base64
 
 
-    # Método da interface
-    def update(self, message: object) -> None:
-        logger.info("Message Received from Subject")
-        logger.debug("Message Dict: %s" % message)
-       
+    # Método da interface Observer
+    def update(self, message: object) -> None:     
         base64 = message['image'].encode('utf-8')        # string to bytes code base64
+        logger.debug("Image base64: %s" % base64)
         self.request(base64)       
 
     def request(self, image_base64: bytes ) -> str:
@@ -60,7 +58,43 @@ class CloudVisionClient(Observer):
 
         return response
 
+class MongoClient(Observer, ConnectionDB):
+    """Classe que representa um Cliente para o MongoDB.
 
+    Args:
+        Observer : Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
+                   update(message: object) -> None
+        ConnectionDB : Implementa a interface ConnectionDB e precisa incluir a definição dos seguintes métodos:
+                   create(object) -> None
+                   update(object) -> None
+                   delete(object) -> None
+    """
+
+    def __init__(self):
+        pass
+        #TODO
+
+    # Método da interface ConnectionDB
+    def create(self):
+        pass
+        #TODO
+
+    # Método da interface ConnectionDB
+    def update(self):
+        pass
+        #TODO
+    
+    # Método da interface ConnectionDB
+    def delete():
+        pass
+        #TODO
+
+    # Método da interface Observer
+    def update(self, message: object) -> None:     
+        id_module = message['id']
+        logger.info("(MongoClient) Message from Id Module: %s" % id_module)
+        logger.info("TODO")  
+  
 
 
         
