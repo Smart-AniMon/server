@@ -16,8 +16,8 @@ MQTT_BROKER = {
 	'PORT' : Porta_do_broker,
 	'USER' : 'User',
 	'PASS' : 'Password',
-    'TOPIC': "topic/test",
-	'CLIENT_NAME': "client_name"
+	'TOPIC': 'topic/test',
+	'CLIENT_NAME': 'client_name'
 }
 
 # Configurar arquivo com chave para acessar API Vision (Google)
