@@ -3,7 +3,7 @@
 import paho.mqtt.publish as publish
 from settings import MQTT_BROKER
 import json
-
+import io, os, base64
 
 USER = MQTT_BROKER['USER']
 PASS = MQTT_BROKER['PASS']
@@ -12,10 +12,16 @@ PORT = MQTT_BROKER['PORT']
 TOPIC = MQTT_BROKER['TOPIC']
 
 
+image = os.path.abspath('tests/wakeupcat.jpg')
+
+# Loads the image into memory
+with io.open(image, 'rb') as image_file:
+    image_bytes = image_file.read()
+    image_base64 = base64.b64encode(image_bytes)
 
 message = {
    "id":"module1",
-   "image":"sdasdasdasdsadsadsad3esaa",
+   "image": image_base64.decode('utf-8'),
    "temperature":30.0,
    "humidity":80.0,
    "localization":{
@@ -28,4 +34,4 @@ message = {
 payload_json = json.dumps(message)
 
 credentials = {'username': USER, 'password': PASS}
-publish.single(TOPIC,payload=payload_json, hostname=HOST, port=PORT, auth=credentials)
+publish.single(TOPIC, payload=payload_json, hostname=HOST, port=PORT, auth=credentials)

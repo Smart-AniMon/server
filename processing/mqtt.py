@@ -7,9 +7,9 @@ from .utils import ReturnCodesMQTT
 from settings import MQTT_BROKER, LOGGING_CONF
 from paho.mqtt import client as mqtt_client
 
-import logging, logging.config
+import logging, logging.config, json
 
-logging.config.fileConfig(fname=LOGGING_CONF)
+#logging.config.fileConfig(fname=LOGGING_CONF)
 logger = logging.getLogger(__name__)
 
 class MQTTClient(Subject):
@@ -28,7 +28,8 @@ class MQTTClient(Subject):
         self.__user = MQTT_BROKER['USER']
         self.__pass = MQTT_BROKER['PASS']
         self.__topic = MQTT_BROKER['TOPIC']
-        self.__consumer =  mqtt_client.Client("animon_app")
+        self.__client_name = MQTT_BROKER['CLIENT_NAME']
+        self.__consumer =  mqtt_client.Client(self.__client_name)
 
     def connect(self):
         logger.info("connecting to broker %s on port %s" % (self.__host, self.__port))
@@ -68,12 +69,17 @@ class MQTTClient(Subject):
             logger.warn("%s" % message_rc)
 
     def __message_callback(self, client, userdata, msg):
+        
+        payload_json = msg.payload.decode()
+
         logger.debug("client = %s" % client)
         logger.debug("userdate = %s" % userdata)
-        logger.debug("msg = %s" % msg.payload.decode())
+        logger.debug("msg = %s" % payload_json)
         logger.info("Message received from broker")
-        #TO DO - Chamar updates de Observers
-        self.notify_all(msg.payload.decode())
+
+        message = json.loads(payload_json)
+
+        self.notify_all(message)
 
 
 

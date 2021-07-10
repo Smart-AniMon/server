@@ -6,7 +6,7 @@ As Classes Observer e Subject são utilizadas para seguir o padrão de modelagem
 from settings import LOGGING_CONF
 import logging, logging.config
 
-logging.config.fileConfig(fname=LOGGING_CONF)
+#logging.config.fileConfig(fname=LOGGING_CONF)
 logger = logging.getLogger(__name__)
 
 class Observer(object):
