@@ -21,7 +21,6 @@ class Observer():
         logger.info("Message Received from Subject")
         raise Exception("NotImplementedException")
 
-
 class Subject():
     """Classe Abstrata para representar o Subject
     """
