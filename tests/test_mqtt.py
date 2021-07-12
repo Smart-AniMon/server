@@ -1,4 +1,4 @@
-from processing.mqtt import MQTTClient
+from processing.clients import MQTTClient
 
-consumer_test = MQTTClient()
-consumer_test.connect()
+consumer = MQTTClient()
+consumer.connect()

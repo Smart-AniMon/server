@@ -1,99 +1,92 @@
 """
-Módulo com implementações das classes que extendem a interface Observer.
+Módulo com implementações das classes concretas que extendem a interface Observer.
 
-CloudVisionClient - Classe para representar a comunicação com a API Vision do Google
-MongoClient - Classe para repreesntar a comunicação com o MongoDB
+Identifier - Classe para representar a comunicação com APIs de identificação.
+Database - Classe para representar a comunicação com banco de dados.
 """
 
-from .interfaces import Observer, ConnectionDB
-from settings import LOGGING_CONF, VISION_KEY_FILE
-from google.cloud import vision
+from .interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
+from settings import LOGGING_CONF
 
 
 import logging, logging.config
-import io, os, base64, binascii
+import binascii, json
 
 logging.config.fileConfig(fname=LOGGING_CONF)
 logger = logging.getLogger(__name__)
 
-class CloudVisionClient(Observer):
-    """Classe que representa um Cliente para API Vision do Google.
-
-    Args:
-        Observer : Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
-                   update(message: object) -> None
+class Identifier(Observer, Subject):
     """
+    Classe para representar um Observer do Subject de Fila de Mensagem. 
+    Implementa a interface Observer e Utiliza a Interface IdentificationAPI para
+    realizar uma consulta na API de identificação.
+       
+    Também representa um Subject para o Observer Database para que o resultado
+    da API de identificação seja armazenada no banco de dados.
 
-    def __init__(self):
-        logger.info("Starting observer CloudVisionClient")
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = VISION_KEY_FILE
-        self.__client = vision.ImageAnnotatorClient()
-        self.__image_content = "" # imagem em bytes sem estar codificada em base64
-
-
-    # Método da interface Observer
-    def update(self, message: object) -> None:     
-        base64 = message['image'].encode('utf-8')        # string to bytes code base64
-        logger.debug("Image base64: %s" % base64)
-        self.request(base64)       
-
-    def request(self, image_base64: bytes ) -> str:
-        self.__image_content =  binascii.a2b_base64(image_base64) # decode base64
-        image = vision.Image(content=self.__image_content)
-
-        # Performs label detection on the image file
-        response = self.__client.label_detection(image=image)
-        logger.debug("Response: \n %s" % response)
-
-        if response.error.message:
-            raise Exception(
-                '{}\nFor more info on error messages, check: '
-                'https://cloud.google.com/apis/design/errors'.format(
-                    response.error.message))
-
-        labels = response.label_annotations
-
-        logger.info("Possible identification")
-        logger.debug("%s" % labels)
-
-        return response
-
-class MongoClient(Observer, ConnectionDB):
-    """Classe que representa um Cliente para o MongoDB.
-
-    Args:
-        Observer : Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
-                   update(message: object) -> None
-        ConnectionDB : Implementa a interface ConnectionDB e precisa incluir a definição dos seguintes métodos:
-                   create(object) -> None
-                   update(object) -> None
-                   delete(object) -> None
-    """
-
-    def __init__(self):
-        pass
-        #TODO
-
-    # Método da interface ConnectionDB
-    def create(self):
-        pass
-        #TODO
-
-    # Método da interface ConnectionDB
-    def update(self):
-        pass
-        #TODO
     
-    # Método da interface ConnectionDB
-    def delete():
-        pass
-        #TODO
+    Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
+            update(message: object) -> None
+    Extende a classe Subject e precisa chamar o método 
+            notify_all(message: object) com a resposta da consulta.
+    """
+
+    def __init__(self):
+        logger.info("Starting Observer/Subject Identify")
+        self.identification_api = IdentificationAPI() # Interface
+        self._image_content = "" # imagem em bytes sem estar codificada em base64
+        super().__init__()
+
+    @property
+    def identification_api(self):
+        return self._identification_api
+    
+    @identification_api.setter
+    def identification_api(self, api):
+        if isinstance(api, IdentificationAPI):
+            self._identification_api = api
+        else:
+            logger.error("{} is not {} instance".format(api, IdentificationAPI))
+            raise Exception('InstanceError')
 
     # Método da interface Observer
     def update(self, message: object) -> None:     
-        id_module = message['id']
-        logger.info("(MongoClient) Message from Id Module: %s" % id_module)
-        logger.info("TODO")  
+        image_base64_str = message['image']
+        logger.debug("Image base64 String: %s" % image_base64_str)
+        self._decode(image_base64_str)
+        try:
+            response = self._identification_api.request(self._image_content)
+            message = json.loads(response)
+            logger.debug("message is {} object".format(type(message)))
+            self.notify_all(message)
+        except Exception as e:
+            logger.error(e)
+            raise
+    
+    def _decode(self, image_base64: str):
+        image_base64_bytes = image_base64.encode('utf-8')    # string to bytes code base64
+        self._image_content = binascii.a2b_base64(image_base64_bytes) # decode base64           
+
+class Database(Observer):
+    """
+    Classe para representar um Observer do Subject de Fila de Mensagem e 
+       do Subject da API de Identificação. 
+       Implementa a interface Observer e Utiliza a Interface ConnectionDB para
+       realizar comunicação com um banco de dados.
+
+    
+    Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
+        update(message: object) -> None
+    """
+
+    def __init__(self):
+        pass
+
+    # Método da interface Observer
+    def update(self, message: object) -> None: 
+        logger.debug("message is {} object".format(type(message)))   
+        logger.debug("Message: {}".format(message))
+        logger.info("TODO - Database")  
   
 
 
