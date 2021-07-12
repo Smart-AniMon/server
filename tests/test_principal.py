@@ -1,10 +1,16 @@
 
-from processing.mqtt import MQTTClient
-from processing.observers import CloudVisionClient, MongoClient
+from processing.clients import MQTTClient, CloudVisionClient
+from processing.observers import Identifier, Database
 
-consumer_test = MQTTClient()
-apivision_observer = CloudVisionClient()
-mongoclient_observer = MongoClient()
-consumer_test.add_observer(apivision_observer)
-consumer_test.add_observer(mongoclient_observer)
-consumer_test.connect()
+subject_consumer = MQTTClient()
+observer_subject_api = Identifier()
+observer_database = Database()
+
+vision_client = CloudVisionClient()
+observer_subject_api.identification_api = vision_client
+
+subject_consumer.add_observer(observer_subject_api)
+subject_consumer.add_observer(observer_database)
+observer_subject_api.add_observer(observer_database)
+
+subject_consumer.connect()
