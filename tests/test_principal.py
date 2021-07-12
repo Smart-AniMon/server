@@ -1,5 +1,5 @@
 
-from processing.clients import MQTTClient, CloudVisionClient
+from processing.clients import MQTTClient, CloudVisionClient, MongoClientObserver
 from processing.observers import Identifier, Database
 
 subject_consumer = MQTTClient()

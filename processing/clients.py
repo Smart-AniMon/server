@@ -8,11 +8,13 @@ MQTTClietn - Classe para repreentar a comunicação com o broker MQTT
 
 from .interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
 from .utils import ReturnCodesMQTT
-from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER
+from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT
 
 # bibliotecas extenas
 from paho.mqtt import client as mqtt_client
 from google.cloud import vision
+from pymongo.mongo_client import MongoClient
+from urllib.parse import quote_plus
 
 # bibliotecas default python
 from threading import Thread
@@ -76,48 +78,57 @@ class CloudVisionClient(IdentificationAPI, Thread):
 
         return response_json
 
-class MongoClient(Observer, ConnectionDB):
+class MongoClientObserver(Observer, ConnectionDB):
     """Classe que representa um Cliente para o MongoDB.
 
-    Args:
-        Observer : Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
-                   update(message: object) -> None
-        ConnectionDB : Implementa a interface ConnectionDB e precisa incluir a definição dos seguintes métodos:
-                   create(object) -> None
-                   update(object) -> None
-                   delete(object) -> None
+    Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
+        update(message: object) -> None
+    Implementa a interface ConnectionDB e precisa incluir a definição dos seguintes métodos:
+        create(object) -> bool
+        upgrade(object) -> bool
+        delete(object) -> bool
+        read(filter) -> Object
     """
 
     def __init__(self):
         super().__init__()
-        pass
-        #TODO
+        logger.info("Starting MongoClient")
+        self._host = MONGO_CONNECT['HOST']
+        self._port = MONGO_CONNECT['PORT']
+        self._user = MONGO_CONNECT['USER']
+        self._pass = MONGO_CONNECT['PASS']
+        self._db_name = MONGO_CONNECT['DATABASE']
+        self._client = MongoClient(host=self._host, port=self._port)
+        self._database = self._client[self._db_name]
+        self._database.authenticate(self._user, self._pass)
+        
+    #def _connect(self):
+
+               
+    # Método da interface ConnectionDB
+    def create(self, obj: object, collect_name: str) -> bool:
+        collection = self._database[collect_name]
+        collection.insert_one(obj)
 
     # Método da interface ConnectionDB
-    def create(self, obj: object) -> bool:
-        pass
-        #TODO
-
-    # Método da interface ConnectionDB
-    def upgrade(self, obj: object) -> bool:
+    def upgrade(self, obj: object, collect_name: str) -> bool:
         pass
         #TODO
     
     # Método da interface ConnectionDB
-    def delete(self, obj: object) -> bool:
+    def delete(self, obj: object, collect_name: str) -> bool:
         pass
         #TODO
 
     # Método da interface ConnectionDB
-    def read(self, filter: object) -> object:
+    def read(self, filter: object, collect_name: str) -> object:
         pass
         #TODO
 
     # Método da interface Observer
     def update(self, message: object) -> None:     
-        id_module = message['id']
-        logger.info("(MongoClient) Message from Id Module: %s" % id_module)
-        logger.info("TODO")  
+        logger.info("(MongoClient) received")
+        self.create(message, "teste-identification")
   
 class MQTTClient(Subject):
     """Classe que representa um Client MQTT para consumir as mensagens de um tópico.

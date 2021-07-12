@@ -11,33 +11,13 @@ else:
 
 
 ## Configurar informações de conexão com o broker.
-"""
-MQTT_BROKER = {
-	'HOST' : 'iot.sj.ifsc.edu.br',
-	'PORT' : 1883,
-	'USER' : 'animon_app',
-	'PASS' : 's*3*S77@26CToeQd',
-    'TOPIC': "animon/identification",
-	'CLIENT_NAME': "client_name"
-}
-
 MQTT_BROKER = {
 	'HOST' : 'IP ou FQDN do broker',
 	'PORT' : Porta_do_broker,
 	'USER' : 'User',
 	'PASS' : 'Password',
-	'TOPIC': 'topic/test',
-	'CLIENT_NAME': 'client_name'
-}
-
-"""
-MQTT_BROKER = {
-	'HOST' : "127.0.0.1",
-	'PORT' : 1883,
-	'USER' : "animon_app",
-	'PASS' : "mqtt",
-	'TOPIC': "animon/identification",
-	'CLIENT_NAME': "animon_app"
+    'TOPIC': "topic/test",
+	'CLIENT_NAME': "client_name"
 }
 
 # Configuração de chave para acessar API Vision (Google)
@@ -47,3 +27,13 @@ if PRODUCTION:
     VISION_KEY_FILE = '/animon/credentials/vision-key.json'
 else:
 	VISION_KEY_FILE = os.path.abspath("../smart-animon-vision-key.json")
+
+# Configuração de credenciais para acesso ao MongoDB Server
+
+MONGO_CONNECT = {
+	'HOST' : 'IP ou FQDN do broker',
+	'PORT' : Porta_do_broker,
+	'USER' : 'User',
+	'PASS' : 'Password',
+	'DATABASE' : "db_name"
+}

@@ -66,16 +66,16 @@ class ConnectionDB():
         super().__init__()
         pass
 
-    def read(self, filter: object) -> object:
+    def read(self, filter: object, collect_name: str) -> object:
         raise Exception("NotImplementedException")
 
-    def create(self, obj: object) -> bool:
+    def create(self, obj: object, collect_name: str) -> bool:
         raise Exception("NotImplementedException")
 
-    def upgrade(self, obj: object) -> bool:
+    def upgrade(self, obj: object, collect_name: str) -> bool:
         raise Exception("NotImplementedException")
 
-    def delete(self, obj: object) -> bool:
+    def delete(self, obj: object, collect_name: str) -> bool:
         raise Exception("NotImplementedException")
 
 class IdentificationAPI():
