@@ -11,6 +11,7 @@ else:
 
 
 ## Configurar informações de conexão com o broker.
+
 MQTT_BROKER = {
 	'HOST' : 'IP ou FQDN do broker',
 	'PORT' : Porta_do_broker,
@@ -34,6 +35,22 @@ MONGO_CONNECT = {
 	'HOST' : 'IP ou FQDN do broker',
 	'PORT' : Porta_do_broker,
 	'USER' : 'User',
-	'PASS' : 'Password',
-	'DATABASE' : "db_name"
+	'PASS' : 'Password'
 }
+
+
+DATABASE_COLLECTIONS = {
+	'Identifier': 'identified_animals',
+	'MQTTClient': 'monitored_animals'
+}
+
+
+
+# Lista de Labels que podem ser identificadas como animais
+# TODO - Pesquisar mais sobre https://storage.googleapis.com/openimages/web/index.html 
+
+ANIMAL_LABELS = ['ANIMAL',
+			     'CAT',
+				 'MAMMAL'
+]
+

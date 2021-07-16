@@ -6,20 +6,23 @@ MongoClient - Classe para representar a comunicação com banco de dados MongoDB
 MQTTClietn - Classe para repreentar a comunicação com o broker MQTT
 """
 
+# Internal python modules
+
 from .interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
 from .utils import ReturnCodesMQTT
-from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT
+from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT, ANIMAL_LABELS
 
-# bibliotecas extenas
+# External python modules
 from paho.mqtt import client as mqtt_client
 from google.cloud import vision
 from pymongo.mongo_client import MongoClient
+from pymongo.errors import DuplicateKeyError
 from urllib.parse import quote_plus
 
-# bibliotecas default python
+# Dafault python modules
 from threading import Thread
 import logging, logging.config
-import io, os, base64, binascii, json
+import io, os, base64, binascii, json, hashlib
 
 # Logs
 logging.config.fileConfig(fname=LOGGING_CONF)
@@ -37,14 +40,15 @@ class CloudVisionClient(IdentificationAPI, Thread):
     def __init__(self):
         logger.info("Starting CloudVisionClient")
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = VISION_KEY_FILE
-        self._client = vision.ImageAnnotatorClient() 
+        self._client = vision.ImageAnnotatorClient()
+        self._identified_labels = [] 
 
     # Método da interface IdentificationAPI
     def request(self, image_identify: bytes ) -> str:
         image = vision.Image(content=image_identify)
 
         # Performs label detection on the image file
-        response = self._client.label_detection(image=image, max_results=100)
+        response = self._client.label_detection(image=image, max_results=50)
         logger.debug("Response: \n %s" % response)
 
         if response.error.message:
@@ -53,36 +57,49 @@ class CloudVisionClient(IdentificationAPI, Thread):
                 'https://cloud.google.com/apis/design/errors'.format(
                     response.error.message))
 
-        labels = response.label_annotations
-        logger.info('Possible identification')
-        logger.info('{}'.format(labels))
-
-        animal = False
-        score = 0.0
-        tipo = ""
-        for label in labels:
-            description = label.description.upper()
-            if "ANIMAL" in description:
-                animal = True
-                tipo = description
-                score = float(label.score)*100.0
-            if "ANIMAL" == tipo:
-                break
+        #response_json = vision.AnnotateImageResponse.to_json(response)
         
-        if animal:       
-            logger.info("Encontrou label {} com {:.2f}%".format(tipo, score))
-        else:
-            logger.info("Label animal não encontrada")
+        labels = response.label_annotations
+        logger.debug('{}'.format(labels))
 
-        response_json = vision.AnnotateImageResponse.to_json(response)
+        response_json = self._check(labels)
+        logger.info('{}'.format(response_json))
 
         return response_json
 
-class MongoClientObserver(Observer, ConnectionDB):
-    """Classe que representa um Cliente para o MongoDB.
+    def _check(self, labels):
+        logger.info("Checking labels")
+        full_labels = []
+        for label in labels:
+            description = label.description
+            score = label.score
+            des_up = description.upper()
+            label = vision.EntityAnnotation.to_json(label)
+            if self._exists(des_up):
+                tipo = description
+                score = float(score)*100.0
+                logger.info("Found label {} with {:.2f}%".format(tipo, score))
+                self._identified_labels.append(label)
+            full_labels.append(label)
+        response_dict = dict()
+        response_dict['identified'] = True
+        if not self._identified_labels:
+            response_dict['identified'] = False
+            self._identified_labels = full_labels
+            logger.debug("full labels {}".format(full_labels))
+        response_dict['labels'] = self._identified_labels
+        return json.dumps(response_dict)
+    
+    def _exists(self, label: str) -> bool:
+        for description in ANIMAL_LABELS:
+            if description in label:
+                return True
+        return False
 
-    Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
-        update(message: object) -> None
+class MongoDBClient(ConnectionDB):
+    """
+    Classe que representa um Cliente para o MongoDB.
+
     Implementa a interface ConnectionDB e precisa incluir a definição dos seguintes métodos:
         create(object) -> bool
         upgrade(object) -> bool
@@ -98,22 +115,37 @@ class MongoClientObserver(Observer, ConnectionDB):
         self._user = MONGO_CONNECT['USER']
         self._pass = MONGO_CONNECT['PASS']
         self._db_name = MONGO_CONNECT['DATABASE']
+
+        self._connect()
+        
+    def _connect(self):
         self._client = MongoClient(host=self._host, port=self._port)
         self._database = self._client[self._db_name]
         self._database.authenticate(self._user, self._pass)
-        
-    #def _connect(self):
-
                
     # Método da interface ConnectionDB
     def create(self, obj: object, collect_name: str) -> bool:
+        logger.info('Try insert message in {} collection'.format(collect_name))
         collection = self._database[collect_name]
-        collection.insert_one(obj)
+        try:
+            document_id = collection.insert_one(obj).inserted_id
+            logger.info('Document _id = {}'.format(document_id))
+        except DuplicateKeyError as e:
+            logger.error("Can't create document , duplicate key error")
+            raise
+        except Exception as e:
+            logger.error(e)           
 
     # Método da interface ConnectionDB
     def upgrade(self, obj: object, collect_name: str) -> bool:
-        pass
-        #TODO
+        logger.info('Upgrade message in {} collection'.format(collect_name))
+        collection = self._database[collect_name]
+        try:
+            document_id = collection.update_one({'_id': obj['_id']}, {'$set': obj})
+        except Exception as e:
+            logger.error("Can't update document")
+            logger.error(e)  
+            raise
     
     # Método da interface ConnectionDB
     def delete(self, obj: object, collect_name: str) -> bool:
@@ -122,25 +154,24 @@ class MongoClientObserver(Observer, ConnectionDB):
 
     # Método da interface ConnectionDB
     def read(self, filter: object, collect_name: str) -> object:
-        pass
-        #TODO
-
-    # Método da interface Observer
-    def update(self, message: object) -> None:     
-        logger.info("(MongoClient) received")
-        self.create(message, "teste-identification")
+        logger.info('Read document at {} collection with filter {}'.format(collect_name, filter))
+        collection = self._database[collect_name]
+        result = collection.find_one({'_id':filter})
+        logger.info('Retrieved {}'.format(result))
+        return result
   
 class MQTTClient(Subject):
-    """Classe que representa um Client MQTT para consumir as mensagens de um tópico.
-       foi construido utilizando a implementação de Client Subscribe da biblioteca paho.
+    """
+    Classe que representa um Client MQTT para consumir as mensagens de um tópico.
+    Foi utilizado a implementação de Client Subscribe da biblioteca paho.
 
-    Args:
-        Subject : Extende a Classe abstrata com métodos para padrão Observer.
+    Extende a Classe abstrata com métodos para padrão Observer.
     """
 
     def __init__(self):
         super().__init__()
         logger.debug("Starting MQTTClient")
+        self.name = 'MQTTClient'
         self._host = MQTT_BROKER['HOST']
         self._port = MQTT_BROKER['PORT']
         self._user = MQTT_BROKER['USER']
@@ -195,8 +226,22 @@ class MQTTClient(Subject):
         logger.debug("msg = %s" % payload_json)
         logger.info("Message received from broker")
 
-        message = json.loads(payload_json)  # create message dict
-        logger.debug("message is a {} object".format(type(message)))
+        msg_dict = json.loads(payload_json)  # create message dict
+        logger.debug("message is a {} object".format(type(msg_dict)))
+        message = self._create_message_id(msg_dict)
         self.notify_all(message)
+    
+    def _create_message_id(self, message: dict) -> dict:
+        text_hash = '{}{}'.format(message['id'], message['capture_date'])
+        logger.info("Text Hash = {}".format(text_hash))
+        _id = hashlib.md5(text_hash.encode('utf-8')).hexdigest()
+        logger.info("_id = {}".format(_id))
+        message['_id'] = _id
+        logger.info("message = {}".format(str(message)))
+        return message
+
+
+
+
 
         

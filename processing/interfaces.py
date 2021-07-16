@@ -17,8 +17,8 @@ class Observer():
         super().__init__()
         pass
 
-    def update(self, message: object) -> None:
-        logger.info("Message Received from Subject")
+    def update(self, message: object, subject_name: str) -> None:
+        logger.info("Message Received from Subject {}".format(subject_name))
         raise Exception("NotImplementedException")
 
 class Subject():
@@ -28,7 +28,15 @@ class Subject():
         super().__init__()
         logger.info("Starting Subject")
         self._observers = []
-        self._state = None
+        self.name = None
+    
+    @property
+    def name(self):
+        return self._name
+    
+    @name.setter
+    def name(self, sub_name):
+        self._name = sub_name
 
     def add_observer(self, observer: Observer) -> None:
         try:
@@ -50,7 +58,7 @@ class Subject():
         logger.info("Notifying Observers")
         for observer in self._observers:
             try:
-                observer.update(message)
+                observer.update(message, self.name)
             except Exception as e:
                 logger.error("Unable to notify Observer %s" % observer)
                 logger.error(e)

@@ -1,4 +1,5 @@
-from processing.clients import MongoClientObserver
+from processing.observers import Identifier
+from processing.clients import CloudVisionClient
 
 import io, os, base64, json
 
@@ -24,6 +25,6 @@ payload = {
 payload_json = json.dumps(payload)
 message = json.loads(payload_json)
 
-client = MongoClientObserver()
-
-client.create(message, "collection-teste")
+observer_subject_identifier = Identifier()
+message['_id'] = 'id_hash_capture_date'
+observer_subject_identifier.update(message, 'MQTTClient')

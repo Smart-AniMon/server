@@ -6,7 +6,9 @@ Database - Classe para representar a comunicação com banco de dados.
 """
 
 from .interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
+from .clients import MQTTClient, MongoDBClient, CloudVisionClient
 from settings import LOGGING_CONF
+from settings import DATABASE_COLLECTIONS as collections
 
 
 import logging, logging.config
@@ -26,16 +28,21 @@ class Identifier(Observer, Subject):
 
     
     Implementa a interface Observer e precisa incluir a definição dos seguintes métodos:
-            update(message: object) -> None
+            update(message: object, sub_name: str) -> None
     Extende a classe Subject e precisa chamar o método 
             notify_all(message: object) com a resposta da consulta.
     """
 
-    def __init__(self):
-        logger.info("Starting Observer/Subject Identify")
-        self.identification_api = IdentificationAPI() # Interface
-        self._image_content = "" # imagem em bytes sem estar codificada em base64
+    def __init__(self, api_instance=None):
         super().__init__()
+        logger.info("Starting Observer/Subject Identifier")
+        if not api_instance:
+            self.identification_api = CloudVisionClient() # Client padrão quando não é informado no construtor
+        else:
+            self.identification_api = api_instance 
+
+        self._image_content = "" # imagem em bytes sem estar codificada em base64
+        self.name = 'Identifier'  # Nome identificador do Subject
 
     @property
     def identification_api(self):
@@ -50,15 +57,16 @@ class Identifier(Observer, Subject):
             raise Exception('InstanceError')
 
     # Método da interface Observer
-    def update(self, message: object) -> None:     
+    def update(self, message: object, sub_name: str) -> None:  
         image_base64_str = message['image']
         logger.debug("Image base64 String: %s" % image_base64_str)
         self._decode(image_base64_str)
         try:
             response = self._identification_api.request(self._image_content)
-            message = json.loads(response)
-            logger.debug("message is {} object".format(type(message)))
-            self.notify_all(message)
+            response_dict = json.loads(response)
+            response_dict['_id'] = message['_id']
+            logger.debug("message is {} object".format(type(response_dict)))
+            self.notify_all(response_dict)
         except Exception as e:
             logger.error(e)
             raise
@@ -79,15 +87,44 @@ class Database(Observer):
         update(message: object) -> None
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, db_instance=None):
+        super().__init__()
+        logger.info("Starting Observer Database")
+        if not db_instance:
+            self.connection_db = MongoDBClient() # Client padrão quando não é informado no construtor
+        else:
+            self.connection_db = db_instance
+
+        self._message = ""    # Objeto a ser adicionado ao banco
+
+    @property
+    def connection_db(self):
+        return self._connection_db
+    
+    @connection_db.setter
+    def connection_db(self, db):
+        if isinstance(db, ConnectionDB):
+            self._connection_db = db
+        else:
+            logger.error("{} is not {} instance".format(db, ConnectionDB))
+            raise Exception('InstanceError')
 
     # Método da interface Observer
-    def update(self, message: object) -> None: 
+    def update(self, message: object, subject_name: str) -> None:
         logger.debug("message is {} object".format(type(message)))   
         logger.debug("Message: {}".format(message))
-        logger.info("TODO - Database")  
-  
+        self._message = message
+        self._verify_subject(subject_name)
+
+    def _verify_subject(self, name: str) -> None:
+        collection = collections[name]
+        if not collection:
+            logger.error("Subject name {} not specified".format(name))
+            raise Exception('NotSpecifiedError')
+        try:
+            self.connection_db.create(self._message, collection)
+        except Exception as e:
+            logger.error(e)
 
 
         
