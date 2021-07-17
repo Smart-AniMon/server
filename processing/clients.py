@@ -8,8 +8,8 @@ MQTTClietn - Classe para repreentar a comunicação com o broker MQTT
 
 # Internal python modules
 
-from .interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
-from .utils import ReturnCodesMQTT
+from processing.interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
+from processing.utils import ReturnCodesMQTT
 from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT, ANIMAL_LABELS
 
 # External python modules
@@ -67,7 +67,7 @@ class CloudVisionClient(IdentificationAPI, Thread):
 
         return response_json
 
-    def _check(self, labels):
+    def _check(self, labels) -> json:
         logger.info("Checking labels")
         full_labels = []
         for label in labels:
@@ -228,10 +228,10 @@ class MQTTClient(Subject):
 
         msg_dict = json.loads(payload_json)  # create message dict
         logger.debug("message is a {} object".format(type(msg_dict)))
-        message = self._create_message_id(msg_dict)
+        message = self._create_id(msg_dict)
         self.notify_all(message)
     
-    def _create_message_id(self, message: dict) -> dict:
+    def _create_id(self, message: dict) -> dict:
         text_hash = '{}{}'.format(message['id'], message['capture_date'])
         logger.info("Text Hash = {}".format(text_hash))
         _id = hashlib.md5(text_hash.encode('utf-8')).hexdigest()

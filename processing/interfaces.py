@@ -17,7 +17,7 @@ class Observer():
         super().__init__()
         pass
 
-    def update(self, message: object, subject_name: str) -> None:
+    def update(self, message: dict, subject_name: str) -> None:
         logger.info("Message Received from Subject {}".format(subject_name))
         raise Exception("NotImplementedException")
 
@@ -54,7 +54,7 @@ class Subject():
             logger.error("Unable to remove Observer ")
             logger.error(e)
 
-    def notify_all(self, message: object) -> None:
+    def notify_all(self, message: dict) -> None:
         logger.info("Notifying Observers")
         for observer in self._observers:
             try:

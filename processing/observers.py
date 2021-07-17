@@ -5,8 +5,8 @@ Identifier - Classe para representar a comunicação com APIs de identificação
 Database - Classe para representar a comunicação com banco de dados.
 """
 
-from .interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
-from .clients import MQTTClient, MongoDBClient, CloudVisionClient
+from processing.interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
+from processing.clients import MQTTClient, MongoDBClient, CloudVisionClient
 from settings import LOGGING_CONF
 from settings import DATABASE_COLLECTIONS as collections
 
