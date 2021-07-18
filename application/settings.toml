@@ -1,0 +1,17 @@
+[default]
+DEBUG = false
+
+[development]
+TEMPLATES_AUTO_RELOAD = true
+DEBUG = true
+
+EXTENSIONS = [
+    "webapp.ext.database",
+    "webapp.ext.appearance",
+    "webapp.blueprints.navigation",
+    "webapp.blueprints.frontend"
+]
+
+TITLE = "Smart AniMon"
+
+MONGO_URI = "mongodb://user:pass@host:27017/db-name"

@@ -8,9 +8,10 @@ MQTTClietn - Classe para repreentar a comunicação com o broker MQTT
 
 # Internal python modules
 
-from processing.interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
-from processing.utils import ReturnCodesMQTT
-from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT, ANIMAL_LABELS
+from .interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
+from .utils import ReturnCodesMQTT
+from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT
+from settings import ANIMAL_LABELS, IDENTIFIED_LABELS_SCORE, FULL_LABELS_SCORE
 
 # External python modules
 from paho.mqtt import client as mqtt_client
@@ -70,24 +71,26 @@ class CloudVisionClient(IdentificationAPI, Thread):
     def _check(self, labels) -> json:
         logger.info("Checking labels")
         full_labels = []
+        self._identified_labels.clear()
+        animal = False
         for label in labels:
-            description = label.description
-            score = label.score
-            des_up = description.upper()
-            label = vision.EntityAnnotation.to_json(label)
-            if self._exists(des_up):
-                tipo = description
-                score = float(score)*100.0
+            tipo = label.description
+            score = float(label.score)*100.0
+            des_up = tipo.upper()
+            label = json.loads(vision.EntityAnnotation.to_json(label))
+            if self._exists(des_up) and score >= IDENTIFIED_LABELS_SCORE:
+                animal = True
                 logger.info("Found label {} with {:.2f}%".format(tipo, score))
                 self._identified_labels.append(label)
-            full_labels.append(label)
+            if score >= FULL_LABELS_SCORE:
+                full_labels.append(label)
         response_dict = dict()
-        response_dict['identified'] = True
-        if not self._identified_labels:
-            response_dict['identified'] = False
-            self._identified_labels = full_labels
-            logger.debug("full labels {}".format(full_labels))
-        response_dict['labels'] = self._identified_labels
+        response_dict['identified'] = False
+        response_dict['labels'] = full_labels
+        logger.debug("full labels {}".format(full_labels))
+        response_dict['identified_labels'] = self._identified_labels
+        if animal:
+            response_dict['identified'] = True
         return json.dumps(response_dict)
     
     def _exists(self, label: str) -> bool:
@@ -237,7 +240,6 @@ class MQTTClient(Subject):
         _id = hashlib.md5(text_hash.encode('utf-8')).hexdigest()
         logger.info("_id = {}".format(_id))
         message['_id'] = _id
-        logger.info("message = {}".format(str(message)))
         return message
 
 

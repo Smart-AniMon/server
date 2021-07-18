@@ -1,12 +1,14 @@
 import os
 
 # False para Desenvolvimento
-PRODUCTION=True
+PRODUCTION=False
 
 if PRODUCTION:
     LOGGING_CONF = '/animon/logging.ini'
 else:
     LOGGING_CONF = os.path.abspath('./logging.ini')
+
+
 
 ## Configurar informações de conexão com o broker.
 
@@ -26,7 +28,7 @@ MQTT_BROKER = {
 if PRODUCTION:
     VISION_KEY_FILE = '/animon/credentials/vision-key.json'
 else:
-	VISION_KEY_FILE = os.path.abspath("../smart-animon-vision-key.json")
+	VISION_KEY_FILE = os.path.abspath("../../smart-animon-vision-key.json")
 
 # Configuração de credenciais para acesso ao MongoDB Server
 
@@ -36,6 +38,7 @@ MONGO_CONNECT = {
 	'USER' : 'User',
 	'PASS' : 'Password'
 }
+
 
 DATABASE_COLLECTIONS = {
 	'Identifier': 'identified_animals',
@@ -51,4 +54,7 @@ ANIMAL_LABELS = ['ANIMAL',
 			     'CAT',
 				 'MAMMAL'
 ]
+IDENTIFIED_LABELS_SCORE = 60.00
+FULL_LABELS_SCORE = 60.00
 
+RESOURCES = os.path.abspath("../application/webapp/blueprints/frontend/static/resources")

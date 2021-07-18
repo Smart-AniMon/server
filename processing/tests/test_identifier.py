@@ -1,5 +1,5 @@
-from processing.observers import Identifier
-from processing.clients import CloudVisionClient
+from src.observers import Identifier
+from src.clients import CloudVisionClient
 
 import io, os, base64, json
 

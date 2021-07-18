@@ -5,14 +5,15 @@ Identifier - Classe para representar a comunicação com APIs de identificação
 Database - Classe para representar a comunicação com banco de dados.
 """
 
-from processing.interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
-from processing.clients import MQTTClient, MongoDBClient, CloudVisionClient
-from settings import LOGGING_CONF
+from .interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
+from .clients import MQTTClient, MongoDBClient, CloudVisionClient
+from .utils import str64_to_bytes
+from settings import LOGGING_CONF, RESOURCES
 from settings import DATABASE_COLLECTIONS as collections
 
 
 import logging, logging.config
-import binascii, json
+import json, io
 
 logging.config.fileConfig(fname=LOGGING_CONF)
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class Identifier(Observer, Subject):
     def update(self, message: object, sub_name: str) -> None:  
         image_base64_str = message['image']
         logger.debug("Image base64 String: %s" % image_base64_str)
-        self._decode(image_base64_str)
+        self._image_content = str64_to_bytes(image_base64_str)
         try:
             response = self._identification_api.request(self._image_content)
             response_dict = json.loads(response)
@@ -69,11 +70,7 @@ class Identifier(Observer, Subject):
             self.notify_all(response_dict)
         except Exception as e:
             logger.error(e)
-            raise
-    
-    def _decode(self, image_base64: str):
-        image_base64_bytes = image_base64.encode('utf-8')    # string to bytes code base64
-        self._image_content = binascii.a2b_base64(image_base64_bytes) # decode base64           
+            raise      
 
 class Database(Observer):
     """
@@ -110,9 +107,11 @@ class Database(Observer):
             raise Exception('InstanceError')
 
     # Método da interface Observer
-    def update(self, message: object, subject_name: str) -> None:
+    def update(self, message: dict, subject_name: str) -> None:
         logger.debug("message is {} object".format(type(message)))   
         logger.debug("Message: {}".format(message))
+        if subject_name == "MQTTClient":
+            message = self._save_image(message)
         self._message = message
         self._verify_subject(subject_name)
 
@@ -125,6 +124,25 @@ class Database(Observer):
             self.connection_db.create(self._message, collection)
         except Exception as e:
             logger.error(e)
+    
+    def _save_image(self, message: dict) -> dict:
+        image_base64_str = message['image']
+        image_bytes = str64_to_bytes(image_base64_str)
+        message_id = message['_id']
+        file_name = "{}.jpg".format(message_id)
+
+
+        path = "{}/{}".format(RESOURCES, file_name)
+        logger.info("Saving image bytes in filesystem - {}".format(path))
+        f = io.open(path, "wb")
+
+        f.write(image_bytes)
+
+        f.close()
+
+        message['image'] = "resources/{}".format(file_name)
+
+        return message
 
 
         

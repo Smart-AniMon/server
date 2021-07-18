@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+
+     {% block jumbotron %}
+
+    <h1>{{ title }}</h1>
+
+    <hr>
+    <table  class="table">
+        <thead>
+            <tr>
+                <th>Módulo</th>
+                <th>Localização</th>
+                <th>Data da Captura</th>
+                <th>Temperatura (°C)</th>
+                <th>Umidade (%)</th>
+                <th>Imagem</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            {% if monitored_animals %}
+            {% for document in monitored_animals %}
+            <tr>
+                <td>{{ document.id }}</td>
+                <td>
+                    Latitude = {{ document.localization.latitude }} <br>
+                    Longitude = {{ document.localization.longitude }}
+                </td>
+                <td>{{ document.capture_date }}</td>
+                <td>{{ document.temperature }}</td>
+                <td>{{ document.humidity }}</td>
+                <td>
+                    <a href="{{ url_for('static', filename = document.image) }}">
+                    <img src= "{{ url_for('static', filename = document.image) }}" alt="image" width="90" height="60">
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+
+    {% endblock jumbotron %}
+
+
+
+{% endblock %}

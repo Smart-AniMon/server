@@ -1,0 +1,5 @@
+dynaconf==2.2.3
+Flask==2.0.1
+Flask-PyMongo==2.3.0
+Flask-Bootstrap==3.3.7.1
+flask-nav

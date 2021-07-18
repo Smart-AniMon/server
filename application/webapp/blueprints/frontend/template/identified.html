@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+
+     {% block jumbotron %}
+
+    <h1>{{ title }}</h1>
+
+    <hr>
+    <table  class="table">
+        <thead>
+            <tr>
+                <th>Imagem</th>
+                <th>Labels</th>
+                <th>Labels Identificadas</th>                 
+            </tr>
+        </thead>
+        <tbody>
+            {% if identified_animals %}
+            {% for document in identified_animals %}
+            {% if document.identified %}
+            {% set file = "resources/{}.jpg".format(document._id) %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('static', filename = file) }}">
+                    <img src= "{{ url_for('static', filename = file) }}" alt="image" width="120" height="90">
+                    </a>
+                </td>
+                <td>
+                    {% for label in document['labels'] %}
+                    <b>Descrição = </b> {{ label['description'] }}  - <b>Score =</b> {{ "{:.2f}%".format(label['score']*100) }}<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for label in document['identified_labels'] %}
+                    <b>Descrição = </b> {{ label['description'] }}  - <b>Score =</b> {{ "{:.2f}%".format(label['score']*100) }}<br>
+                    {% endfor %}
+                </td>
+                
+            </tr>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+
+    {% endblock jumbotron %}
+
+
+
+{% endblock %}

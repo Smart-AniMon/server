@@ -1,4 +1,5 @@
 from enum import Enum
+import binascii
 
 class ReturnCodesMQTT():
     MESSAGES = {
@@ -16,3 +17,8 @@ class ReturnCodesMQTT():
         if code_rc > 5:
             code_rc = 6
         return cls.MESSAGES[str(code_rc)]
+
+def str64_to_bytes(image_base64: str) -> bytes:
+    image_base64_bytes = image_base64.encode('utf-8')    # string to bytes code base64
+    image_bytes = binascii.a2b_base64(image_base64_bytes) # decode base64    
+    return  image_bytes

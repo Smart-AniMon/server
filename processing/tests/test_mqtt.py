@@ -1,4 +1,3 @@
-from processing.clients import MQTTClient
-
+from src.clients import MQTTClient
 consumer = MQTTClient()
 consumer.connect()
