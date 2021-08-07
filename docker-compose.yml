@@ -1,0 +1,42 @@
+version: "3.7"
+services:
+  mongo:
+    container_name: mongo
+    image: mongo:4.4.6
+    restart: unless-stopped
+    command: mongod --auth
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGODB_DATA_DIR: /data/db
+      MONDODB_LOG_DIR: /dev/null
+    volumes:
+      - ./mongo/data:/data/db
+      - ./mongo/create_users.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  processing:
+    container_name: processing
+    image: animon/processing:1.0.0
+    build: ./processing
+    env_file:
+      - ./processing/env_vars
+    volumes:
+      - resources:/animon/resources
+      - ${VISION_KEY_FILE}:/animon/credentials/vision-key.json
+    depends_on:
+      - mongo
+
+  application:
+    container_name: application
+    image: animon/application:1.0.0
+    build: ./application
+    env_file:
+      - ./application/env_vars
+    volumes:
+      - resources:/animon/application/blueprints/frontend/static
+    ports:
+      - 80:5000
+    depends_on:
+      - mongo
+
+volumes:
+    resources:

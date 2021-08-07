@@ -1,1 +1,0 @@
-Imagens serão salvas pelo sistema de processamento neste diretório.

@@ -13,3 +13,8 @@ def create_app():
     app = minimal_app()
     configuration.load_extensions(app)
     return app
+
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True, host='0.0.0.0')

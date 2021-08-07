@@ -1,44 +1,43 @@
 import os
 
+APP_PATH = os.environ.get('APP_PATH', '/animon')
+
 # False para Desenvolvimento
-PRODUCTION=False
+PRODUCTION=True
 
 if PRODUCTION:
-    LOGGING_CONF = '/animon/logging.ini'
+    LOGGING_CONF = APP_PATH + '/logging.ini'
 else:
     LOGGING_CONF = os.path.abspath('./logging.ini')
 
 
 
 ## Configurar informações de conexão com o broker.
-
 MQTT_BROKER = {
-	'HOST' : 'IP ou FQDN do broker',
-	'PORT' : Porta_do_broker,
-	'USER' : 'User',
-	'PASS' : 'Password',
-    'TOPIC': "topic/test",
-	'CLIENT_NAME': "client_name"
+	'HOST' : os.environ.get('BROKER_HOST', 'IP ou FQDN do Broker'),
+	'PORT' : os.environ.get('BROKER_PORT', 'Numero Porta_do_broker'),
+	'USER' : os.environ.get('BROKER_USER', 'User'),
+	'PASS' : os.environ.get('BROKER_PASS', 'Password'),
+    'TOPIC': os.environ.get('BROKER_TOPIC', 'topic/test'),
+	'CLIENT_NAME': os.environ.get('BROKER_CLIENT_NAME', 'client_name')
 }
-
 
 # Configuração de chave para acessar API Vision (Google)
 # https://cloud.google.com/vision/docs/quickstart-client-libraries#client-libraries-install-python
 
 if PRODUCTION:
-    VISION_KEY_FILE = '/animon/credentials/vision-key.json'
+    VISION_KEY_FILE =  APP_PATH + '/credentials/vision-key.json'
 else:
 	VISION_KEY_FILE = os.path.abspath("../../smart-animon-vision-key.json")
 
 # Configuração de credenciais para acesso ao MongoDB Server
-
 MONGO_CONNECT = {
-	'HOST' : 'IP ou FQDN do broker',
-	'PORT' : Porta_do_broker,
-	'USER' : 'User',
-	'PASS' : 'Password'
+	'HOST' : os.environ.get('MONGO_HOST', 'IP ou FQDN do Mongo'),
+	'PORT' : os.environ.get('MONGO_PORT', 'Numero da Porta do Mongo'),
+	'USER' : os.environ.get('MONGO_USER', 'User'),
+	'PASS' : os.environ.get('MONGO_PASS', 'Password'),
+	'DATABASE' : os.environ.get('MONGO_DATABASE', 'Database name')
 }
-
 
 DATABASE_COLLECTIONS = {
 	'Identifier': 'identified_animals',
@@ -52,9 +51,10 @@ DATABASE_COLLECTIONS = {
 
 ANIMAL_LABELS = ['ANIMAL',
 			     'CAT',
-				 'MAMMAL'
+				 'MAMMAL',
+				 'PANDA'
 ]
-IDENTIFIED_LABELS_SCORE = 60.00
-FULL_LABELS_SCORE = 60.00
+IDENTIFIED_LABELS_SCORE = 80.00
+FULL_LABELS_SCORE = 70.00
 
-RESOURCES = os.path.abspath("../application/webapp/blueprints/frontend/static/resources")
+RESOURCES = os.environ.get('RESOURCES_PATH', '/animon/resources')

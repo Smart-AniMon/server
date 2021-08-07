@@ -14,4 +14,5 @@ EXTENSIONS = [
 
 TITLE = "Smart AniMon"
 
-MONGO_URI = "mongodb://user:pass@host:27017/db-name"
+# Host -> nome do contêiner do mongo
+MONGO_URI="mongodb://user_application:pass_application@mongo/animon_db"

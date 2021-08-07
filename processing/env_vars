@@ -1,0 +1,16 @@
+APP_PATH=/animon
+
+# Broker
+BROKER_HOST=FQDN_Broker
+BROKER_PORT=Porta_Broker
+BROKER_USER=user_broker
+BROKER_PASS=pass_broker
+BROKER_TOPIC=topic/test
+CLIENT_NAME=client_name
+
+#Mongo - container
+MONGO_HOST=mongo
+MONGO_PORT=27017
+MONGO_USER=user_processing
+MONGO_PASS=pass_processing
+MONGO_DATABASE=animon_db

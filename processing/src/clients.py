@@ -114,7 +114,7 @@ class MongoDBClient(ConnectionDB):
         super().__init__()
         logger.info("Starting MongoClient")
         self._host = MONGO_CONNECT['HOST']
-        self._port = MONGO_CONNECT['PORT']
+        self._port = int(MONGO_CONNECT['PORT'])
         self._user = MONGO_CONNECT['USER']
         self._pass = MONGO_CONNECT['PASS']
         self._db_name = MONGO_CONNECT['DATABASE']
@@ -176,7 +176,7 @@ class MQTTClient(Subject):
         logger.debug("Starting MQTTClient")
         self.name = 'MQTTClient'
         self._host = MQTT_BROKER['HOST']
-        self._port = MQTT_BROKER['PORT']
+        self._port = int(MQTT_BROKER['PORT'])
         self._user = MQTT_BROKER['USER']
         self._pass = MQTT_BROKER['PASS']
         self._topic = MQTT_BROKER['TOPIC']
