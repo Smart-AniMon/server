@@ -1,16 +1,18 @@
 # This is the Publisher Example
 
 import paho.mqtt.publish as publish
+import create_env
 from settings import MQTT_BROKER
 import json
 import io, os, base64
 import datetime
 
 
+
 USER = MQTT_BROKER['USER']
 PASS = MQTT_BROKER['PASS']
 HOST = MQTT_BROKER['HOST']
-PORT = MQTT_BROKER['PORT']
+PORT = int(MQTT_BROKER['PORT'])
 TOPIC = MQTT_BROKER['TOPIC']
 
 images = [

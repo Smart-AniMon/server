@@ -15,3 +15,7 @@ def identified():
 def not_identified():
     result = instance.db['identified_animals'].find()
     return render_template("notidentified.html", identified_animals=result, title="Animais não Identificados")
+
+def notification():
+    result = instance.db['notifications'].find()
+    return render_template("notification.html", notifications=result, title="Notificações")

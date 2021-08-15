@@ -41,7 +41,9 @@ MONGO_CONNECT = {
 
 DATABASE_COLLECTIONS = {
 	'Identifier': 'identified_animals',
-	'MQTTClient': 'monitored_animals'
+	'MQTTClient': 'monitored_animals',
+	'Notification': 'notifications',
+	'Flag': 'flags'
 }
 
 

@@ -32,7 +32,8 @@ services:
     env_file:
       - ./application/env_vars
     volumes:
-      - resources:/animon/application/blueprints/frontend/static
+      - resources:/animon/application/webapp/blueprints/frontend/static/resources
+      - ./application:/animon/application
     ports:
       - 80:5000
     depends_on:

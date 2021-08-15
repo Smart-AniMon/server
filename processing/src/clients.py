@@ -159,7 +159,7 @@ class MongoDBClient(ConnectionDB):
     def read(self, filter: object, collect_name: str) -> object:
         logger.info('Read document at {} collection with filter {}'.format(collect_name, filter))
         collection = self._database[collect_name]
-        result = collection.find_one({'_id':filter})
+        result = collection.find_one(filter)
         logger.info('Retrieved {}'.format(result))
         return result
   
