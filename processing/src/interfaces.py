@@ -4,21 +4,22 @@ Módulo com definições das interfaces e classes abstratas utilizadas no sistem
 A Interface Observer e Classe Abstrata Subject são utilizadas para seguir o padrão de modelagem Observer.
 As Interfaces ConnectionDB e IdentificationAPI são utilizadas pelas classes concretas de Observers.
 """
-from settings import LOGGING_CONF
+from settings import LOGGING
 import logging, logging.config
+from .utils import get_name
 
-logging.config.fileConfig(fname=LOGGING_CONF)
-logger = logging.getLogger(__name__)
+logging.config.dictConfig(LOGGING)
 
 class Observer():
     """Classe para representar a Interface Observer
     """
     def __init__(self):
         super().__init__()
+        self.logger = logging.getLogger(get_name(self))
         pass
 
     def update(self, message: dict, subject_name: str) -> None:
-        logger.info("Message Received from Subject {}".format(subject_name))
+        self.logger.info("Message Received from Subject {}".format(subject_name))
         raise Exception("NotImplementedException")
 
 class Subject():
@@ -26,7 +27,8 @@ class Subject():
     """
     def __init__(self):
         super().__init__()
-        logger.info("Starting Subject")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.info("Starting Subject")
         self._observers = []
         self.name = None
     
@@ -40,37 +42,38 @@ class Subject():
 
     def add_observer(self, observer: Observer) -> None:
         try:
-            logger.info("Adding Observer")
+            self.logger.info("Adding Observer")
             self._observers.append(observer)
         except Exception as e:
-            logger.error("Unable to add Observer ")
-            logger.error(e)
+            self.logger.error("Unable to add Observer ")
+            self.logger.error(e)
 
     def remove_observer(self, observer: Observer) -> None:
         try:
-            logger.info("Removing Observer")
+            self.logger.info("Removing Observer")
             self._observers.remove(observer)
         except Exception as e:
-            logger.error("Unable to remove Observer ")
-            logger.error(e)
+            self.logger.error("Unable to remove Observer ")
+            self.logger.error(e)
 
     def notify_all(self, message: dict) -> None:
-        logger.info("Notifying Observers")
+        self.logger.info("Notifying Observers")
         for observer in self._observers:
             try:
                 observer.update(message, self.name)
             except Exception as e:
-                logger.error("Unable to notify Observer %s" % observer)
-                logger.error(e)
+                self.logger.error("Unable to notify Observer %s" % observer)
+                self.logger.error(e)
                 raise
         if not self._observers:
-            logger.info("No observers on the list")
+            self.logger.info("No observers on the list")
 
 class ConnectionDB():
     """Classe para representar a Interface Genérica para comunicação com banco de dados
     """
     def __init__(self):
         super().__init__()
+        self.logger = logging.getLogger(get_name(self))
         pass
 
     def read(self, filter: object, collect_name: str) -> object:

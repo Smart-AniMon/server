@@ -1,4 +1,4 @@
-APP_PATH=/animon
+APP_PATH=/animon/processing
 
 # Broker
 BROKER_HOST=FQDN_Broker

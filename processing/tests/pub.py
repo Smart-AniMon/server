@@ -1,7 +1,6 @@
 # This is the Publisher Example
 
 import paho.mqtt.publish as publish
-import create_env
 from settings import MQTT_BROKER
 import json
 import io, os, base64

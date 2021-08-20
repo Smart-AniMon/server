@@ -185,5 +185,9 @@ pip-selfcheck.json
 .history
 .ionide
 
+*resources
+processing/resources*
+processing/credentials/vision-key.json
+*vision-key.json
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,linux,python,venv
 

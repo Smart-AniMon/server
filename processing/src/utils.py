@@ -22,3 +22,7 @@ def str64_to_bytes(image_base64: str) -> bytes:
     image_base64_bytes = image_base64.encode('utf-8')    # string to bytes code base64
     image_bytes = binascii.a2b_base64(image_base64_bytes) # decode base64    
     return  image_bytes
+
+def get_name(c : object) -> str:
+    return c.__module__+'.'+c.__class__.__name__
+

@@ -9,8 +9,8 @@ MQTTClietn - Classe para repreentar a comunicação com o broker MQTT
 # Internal python modules
 
 from .interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
-from .utils import ReturnCodesMQTT
-from settings import LOGGING_CONF, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT
+from .utils import ReturnCodesMQTT, get_name
+from settings import LOGGING, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT
 from settings import ANIMAL_LABELS, IDENTIFIED_LABELS_SCORE, FULL_LABELS_SCORE
 
 # External python modules
@@ -26,8 +26,8 @@ import logging, logging.config
 import io, os, base64, binascii, json, hashlib
 
 # Logs
-logging.config.fileConfig(fname=LOGGING_CONF)
-logger = logging.getLogger(__name__)
+logging.config.dictConfig(LOGGING)
+
 
 class CloudVisionClient(IdentificationAPI, Thread):
     """
@@ -39,7 +39,8 @@ class CloudVisionClient(IdentificationAPI, Thread):
     """
 
     def __init__(self):
-        logger.info("Starting CloudVisionClient")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.info("Starting CloudVisionClient")
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = VISION_KEY_FILE
         self._client = vision.ImageAnnotatorClient()
         self._identified_labels = [] 
@@ -50,7 +51,7 @@ class CloudVisionClient(IdentificationAPI, Thread):
 
         # Performs label detection on the image file
         response = self._client.label_detection(image=image, max_results=50)
-        logger.debug("Response: \n %s" % response)
+        self.logger.debug("Response: \n %s" % response)
 
         if response.error.message:
             raise Exception(
@@ -61,15 +62,15 @@ class CloudVisionClient(IdentificationAPI, Thread):
         #response_json = vision.AnnotateImageResponse.to_json(response)
         
         labels = response.label_annotations
-        logger.debug('{}'.format(labels))
+        self.logger.debug('{}'.format(labels))
 
         response_json = self._check(labels)
-        logger.info('{}'.format(response_json))
+        self.logger.info('{}'.format(response_json))
 
         return response_json
 
     def _check(self, labels) -> json:
-        logger.info("Checking labels")
+        self.logger.info("Checking labels")
         full_labels = []
         self._identified_labels.clear()
         animal = False
@@ -80,14 +81,14 @@ class CloudVisionClient(IdentificationAPI, Thread):
             label = json.loads(vision.EntityAnnotation.to_json(label))
             if self._exists(des_up) and score >= IDENTIFIED_LABELS_SCORE:
                 animal = True
-                logger.info("Found label {} with {:.2f}%".format(tipo, score))
+                self.logger.info("Found label {} with {:.2f}%".format(tipo, score))
                 self._identified_labels.append(label)
             if score >= FULL_LABELS_SCORE:
                 full_labels.append(label)
         response_dict = dict()
         response_dict['identified'] = False
         response_dict['labels'] = full_labels
-        logger.debug("full labels {}".format(full_labels))
+        self.logger.debug("full labels {}".format(full_labels))
         response_dict['identified_labels'] = self._identified_labels
         if animal:
             response_dict['identified'] = True
@@ -112,7 +113,8 @@ class MongoDBClient(ConnectionDB):
 
     def __init__(self):
         super().__init__()
-        logger.info("Starting MongoClient")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.info("Starting MongoClient")
         self._host = MONGO_CONNECT['HOST']
         self._port = int(MONGO_CONNECT['PORT'])
         self._user = MONGO_CONNECT['USER']
@@ -128,26 +130,26 @@ class MongoDBClient(ConnectionDB):
                
     # Método da interface ConnectionDB
     def create(self, obj: object, collect_name: str) -> bool:
-        logger.info('Try insert message in {} collection'.format(collect_name))
+        self.logger.info('Try insert message in {} collection'.format(collect_name))
         collection = self._database[collect_name]
         try:
             document_id = collection.insert_one(obj).inserted_id
-            logger.info('Document _id = {}'.format(document_id))
+            self.logger.info('Document _id = {}'.format(document_id))
         except DuplicateKeyError as e:
-            logger.error("Can't create document , duplicate key error")
+            self.logger.error("Can't create document , duplicate key error")
             raise
         except Exception as e:
-            logger.error(e)           
+            self.logger.error(e)           
 
     # Método da interface ConnectionDB
     def upgrade(self, obj: object, collect_name: str) -> bool:
-        logger.info('Upgrade message in {} collection'.format(collect_name))
+        self.logger.info('Upgrade message in {} collection'.format(collect_name))
         collection = self._database[collect_name]
         try:
             document_id = collection.update_one({'_id': obj['_id']}, {'$set': obj})
         except Exception as e:
-            logger.error("Can't update document")
-            logger.error(e)  
+            self.logger.error("Can't update document")
+            self.logger.error(e)  
             raise
     
     # Método da interface ConnectionDB
@@ -157,10 +159,10 @@ class MongoDBClient(ConnectionDB):
 
     # Método da interface ConnectionDB
     def read(self, filter: object, collect_name: str) -> object:
-        logger.info('Read document at {} collection with filter {}'.format(collect_name, filter))
+        self.logger.info('Read document at {} collection with filter {}'.format(collect_name, filter))
         collection = self._database[collect_name]
         result = collection.find_one(filter)
-        logger.info('Retrieved {}'.format(result))
+        self.logger.info('Retrieved {}'.format(result))
         return result
   
 class MQTTClient(Subject):
@@ -173,7 +175,8 @@ class MQTTClient(Subject):
 
     def __init__(self):
         super().__init__()
-        logger.debug("Starting MQTTClient")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.debug("Starting MQTTClient")
         self.name = 'MQTTClient'
         self._host = MQTT_BROKER['HOST']
         self._port = int(MQTT_BROKER['PORT'])
@@ -184,61 +187,61 @@ class MQTTClient(Subject):
         self._consumer =  mqtt_client.Client(self._client_name)
 
     def connect(self):
-        logger.info("connecting to broker {} on port {}".format(self._host, self._port))
-        logger.debug("credentials {} - {}".format(self._user, self._pass))
+        self.logger.info("connecting to broker {} on port {}".format(self._host, self._port))
+        #self.logger.debug("credentials {} - {}".format(self._user, self._pass))
         self._consumer.username_pw_set(self._user, self._pass)
         self._consumer.on_connect = self._connect_callback
         self._consumer.on_message = self._message_callback
         try:
             self._consumer.connect(self._host, self._port)
         except ConnectionRefusedError:
-            logger.error("Não foi possível estabelecer conexão com Broker. Verifique parâmetros em settings.py")
+            self.logger.error("Não foi possível estabelecer conexão com Broker. Verifique parâmetros em settings.py")
         except Exception as e:
-            logger.error(e)
+            self.logger.error(e)
             raise
         else:
             try:
-                logger.info("Starting ClientMQTT")
+                self.logger.info("Starting ClientMQTT")
                 self._consumer.loop_forever()
             except KeyboardInterrupt:
-                logger.error("Exit")
+                self.logger.error("Exit")
             except Exception as e:
-                logger.error(e)
+                self.logger.error(e)
                 raise 
 
     def _connect_callback(self, client, userdata, flags, rc):
-        logger.debug("client = %s" % client)
-        logger.debug("userdate = %s" % userdata)
-        logger.debug("flags = %s" % flags)
-        logger.debug("rc = %s" % rc)
+        self.logger.debug("client = %s" % client)
+        self.logger.debug("userdate = %s" % userdata)
+        self.logger.debug("flags = %s" % flags)
+        self.logger.debug("rc = %s" % rc)
         message_rc = ReturnCodesMQTT.get_message(rc)
         if rc == 0:
-            logger.info("connected to broker")
-            logger.info("Subscribe in topic %s" % self._topic)
+            self.logger.info("connected to broker")
+            self.logger.info("Subscribe in topic %s" % self._topic)
             client.subscribe(self._topic)
-            logger.info("waiting for messages")
+            self.logger.info("waiting for messages")
         else:
-            logger.warn("%s" % message_rc)
+            self.logger.warn("%s" % message_rc)
 
     def _message_callback(self, client, userdata, msg):
         
         payload_json = msg.payload.decode()
 
-        logger.debug("client = %s" % client)
-        logger.debug("userdate = %s" % userdata)
-        logger.debug("msg = %s" % payload_json)
-        logger.info("Message received from broker")
+        self.logger.debug("client = %s" % client)
+        self.logger.debug("userdate = %s" % userdata)
+        self.logger.debug("msg = %s" % payload_json)
+        self.logger.info("Message received from broker")
 
         msg_dict = json.loads(payload_json)  # create message dict
-        logger.debug("message is a {} object".format(type(msg_dict)))
+        self.logger.debug("message is a {} object".format(type(msg_dict)))
         message = self._create_id(msg_dict)
         self.notify_all(message)
     
     def _create_id(self, message: dict) -> dict:
         text_hash = '{}{}'.format(message['id'], message['capture_date'])
-        logger.info("Text Hash = {}".format(text_hash))
+        self.logger.info("Text Hash = {}".format(text_hash))
         _id = hashlib.md5(text_hash.encode('utf-8')).hexdigest()
-        logger.info("_id = {}".format(_id))
+        self.logger.info("_id = {}".format(_id))
         message['_id'] = _id
         return message
 

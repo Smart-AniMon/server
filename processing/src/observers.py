@@ -7,16 +7,15 @@ Database - Classe para representar a comunicação com banco de dados.
 
 from .interfaces import  Subject, Observer, ConnectionDB, IdentificationAPI
 from .clients import MQTTClient, MongoDBClient, CloudVisionClient
-from .utils import str64_to_bytes
-from settings import LOGGING_CONF, RESOURCES
+from .utils import str64_to_bytes, get_name
+from settings import LOGGING, RESOURCES
 from settings import DATABASE_COLLECTIONS as collections
 
 
 import logging, logging.config
-import json, io
+import json, io, os
 
-logging.config.fileConfig(fname=LOGGING_CONF)
-logger = logging.getLogger(__name__)
+logging.config.dictConfig(LOGGING)
 
 class Identifier(Observer, Subject):
     """
@@ -36,7 +35,8 @@ class Identifier(Observer, Subject):
 
     def __init__(self, api_instance=None):
         super().__init__()
-        logger.info("Starting Observer/Subject Identifier")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.info("Starting Observer/Subject Identifier")
         if not api_instance:
             self.identification_api = CloudVisionClient() # Client padrão quando não é informado no construtor
         else:
@@ -54,22 +54,22 @@ class Identifier(Observer, Subject):
         if isinstance(api, IdentificationAPI):
             self._identification_api = api
         else:
-            logger.error("{} is not {} instance".format(api, IdentificationAPI))
+            self.logger.error("{} is not {} instance".format(api, IdentificationAPI))
             raise Exception('InstanceError')
 
     # Método da interface Observer
     def update(self, message: object, sub_name: str) -> None:  
         image_base64_str = message['image']
-        logger.debug("Image base64 String: %s" % image_base64_str)
+        self.logger.debug("Image base64 String: %s" % image_base64_str)
         self._image_content = str64_to_bytes(image_base64_str)
         try:
             response = self._identification_api.request(self._image_content)
             response_dict = json.loads(response)
             response_dict['_id'] = message['_id']
-            logger.debug("message is {} object".format(type(response_dict)))
+            self.logger.debug("message is {} object".format(type(response_dict)))
             self.notify_all(response_dict)
         except Exception as e:
-            logger.error(e)
+            self.logger.error(e)
             raise      
 
 class Database(Observer):
@@ -86,7 +86,8 @@ class Database(Observer):
 
     def __init__(self, db_instance=None):
         super().__init__()
-        logger.info("Starting Observer Database")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.info("Starting Observer Database")
         if not db_instance:
             self.connection_db = MongoDBClient() # Client padrão quando não é informado no construtor
         else:
@@ -103,13 +104,13 @@ class Database(Observer):
         if isinstance(db, ConnectionDB):
             self._connection_db = db
         else:
-            logger.error("{} is not {} instance".format(db, ConnectionDB))
+            self.logger.error("{} is not {} instance".format(db, ConnectionDB))
             raise Exception('InstanceError')
 
     # Método da interface Observer
     def update(self, message: dict, subject_name: str) -> None:
-        logger.debug("message is {} object".format(type(message)))   
-        logger.debug("Message: {}".format(message))
+        self.logger.debug("message is {} object".format(type(message)))   
+        self.logger.debug("Message: {}".format(message))
         if subject_name == "MQTTClient":
             message = self._save_image(message)
         self._message = message
@@ -118,12 +119,12 @@ class Database(Observer):
     def _verify_subject(self, name: str) -> None:
         collection = collections[name]
         if not collection:
-            logger.error("Subject name {} not specified".format(name))
+            self.logger.error("Subject name {} not specified".format(name))
             raise Exception('NotSpecifiedError')
         try:
             self.connection_db.create(self._message, collection)
         except Exception as e:
-            logger.error(e)
+            self.logger.error(e)
     
     def _save_image(self, message: dict) -> dict:
         image_base64_str = message['image']
@@ -131,9 +132,11 @@ class Database(Observer):
         message_id = message['_id']
         file_name = "{}.jpg".format(message_id)
 
+        if not os.path.exists(RESOURCES):
+            os.makedirs(RESOURCES)
 
         path = "{}/{}".format(RESOURCES, file_name)
-        logger.info("Saving image bytes in filesystem - {}".format(path))
+        self.logger.info("Saving image bytes in filesystem - {}".format(path))
         f = io.open(path, "wb")
 
         f.write(image_bytes)
@@ -159,7 +162,8 @@ class Notification(Observer):
 
     def __init__(self, db_instance=None):
         super().__init__()
-        logger.info("Starting Observer Notification")
+        self.logger = logging.getLogger(get_name(self))
+        self.logger.info("Starting Observer Notification")
         if not db_instance:
             self.connection_db = MongoDBClient() # Client padrão quando não é informado no construtor
         else:
@@ -176,20 +180,20 @@ class Notification(Observer):
         if isinstance(db, ConnectionDB):
             self._connection_db = db
         else:
-            logger.error("{} is not {} instance".format(db, ConnectionDB))
+            self.logger.error("{} is not {} instance".format(db, ConnectionDB))
             raise Exception('InstanceError')
 
     # Método da interface Observer
     def update(self, message: dict, subject_name: str) -> None:
-        logger.debug("message is {} object".format(type(message)))   
-        logger.debug("Message: {}".format(message))
+        self.logger.debug("message is {} object".format(type(message)))   
+        self.logger.debug("Message: {}".format(message))
         self._message = message
         self._check_flags()      
     
     def _check_flags(self):
         collection_flags = collections['Flag']
         documents_flags = self.connection_db.read('', collection_flags)
-        logger.debug("Document Flags {}".format(documents_flags))
+        self.logger.debug("Document Flags {}".format(documents_flags))
         identified_flags = []
         notification = dict()
         if documents_flags:
@@ -208,5 +212,5 @@ class Notification(Observer):
                 try:
                     self.connection_db.create(notification, collections['Notification'])
                 except Exception as e:
-                    logger.error(e)
+                    self.logger.error(e)
 
