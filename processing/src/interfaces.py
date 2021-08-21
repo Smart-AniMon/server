@@ -76,7 +76,7 @@ class ConnectionDB():
         self.logger = logging.getLogger(get_name(self))
         pass
 
-    def read(self, filter: object, collect_name: str) -> object:
+    def read(self, filter: object, collect_name: str, just_one=False) -> object:
         raise Exception("NotImplementedException")
 
     def create(self, obj: object, collect_name: str) -> bool:

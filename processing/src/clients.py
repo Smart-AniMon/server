@@ -158,10 +158,19 @@ class MongoDBClient(ConnectionDB):
         #TODO
 
     # Método da interface ConnectionDB
-    def read(self, filter: object, collect_name: str) -> object:
+    def read(self, filter: object, collect_name: str, just_one=False) -> object:
         self.logger.info('Read document at {} collection with filter {}'.format(collect_name, filter))
         collection = self._database[collect_name]
-        result = collection.find_one(filter)
+        if filter is None:
+            if just_one:
+                result = collection.find_one()
+            else:
+                result = collection.find()
+        else:
+            if just_one:
+                result = collection.find_one(filter)
+            else:
+                result = collection.find(filter)
         self.logger.info('Retrieved {}'.format(result))
         return result
   

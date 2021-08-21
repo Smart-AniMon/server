@@ -7,9 +7,11 @@
     <h1>{{ title }}</h1>
 
     <hr>
+    {{ pagination.info }}
     <table  class="table">
         <thead>
             <tr>
+                <th>#</th>
                 <th>Imagem</th>
                 <th>Labels</th>                
             </tr>
@@ -20,6 +22,7 @@
             {% if not document.identified %}
             {% set file = "resources/{}.jpg".format(document._id) %}
             <tr>
+                <td>{{ loop.index + pagination.skip }}</td>
                 <td>
                     <a href="{{ url_for('static', filename = file) }}">
                     <img src= "{{ url_for('static', filename = file) }}" alt="image" width="120" height="90">
@@ -37,6 +40,7 @@
             {% endif %}
         </tbody>
     </table>
+    {{ pagination.links }}
 
     {% endblock jumbotron %}
 

@@ -2,7 +2,6 @@ from flask import Flask
 
 from webapp.ext import configuration
 
-
 def minimal_app():
     app = Flask(__name__, static_folder="blueprints/frontend/static")
     configuration.init_app(app)

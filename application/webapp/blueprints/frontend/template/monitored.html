@@ -7,9 +7,11 @@
     <h1>{{ title }}</h1>
 
     <hr>
+    {{ pagination.info }}
     <table  class="table">
         <thead>
             <tr>
+                <th>#</th>
                 <th>Módulo</th>
                 <th>Localização</th>
                 <th>Data da Captura</th>
@@ -23,6 +25,7 @@
             {% if monitored_animals %}
             {% for document in monitored_animals %}
             <tr>
+                <td>{{ loop.index + pagination.skip }}</td>
                 <td>{{ document.id }}</td>
                 <td>
                     Latitude = {{ document.localization.latitude }} <br>
@@ -41,6 +44,7 @@
             {% endif %}
         </tbody>
     </table>
+    {{ pagination.links }}
 
     {% endblock jumbotron %}
 

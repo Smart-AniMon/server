@@ -3,3 +3,5 @@ Flask==2.0.1
 Flask-PyMongo==2.3.0
 Flask-Bootstrap==3.3.7.1
 flask-nav
+Flask-WTF
+flask-paginate==0.6.0

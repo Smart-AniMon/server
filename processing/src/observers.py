@@ -192,25 +192,31 @@ class Notification(Observer):
     
     def _check_flags(self):
         collection_flags = collections['Flag']
-        documents_flags = self.connection_db.read('', collection_flags)
-        self.logger.debug("Document Flags {}".format(documents_flags))
+        collection_notification = collections['Notification']
+        documents_flags = self.connection_db.read({'active': True}, collection_flags)
+        self.logger.debug("Document Flags size {}".format(documents_flags.count()))
         identified_flags = []
         notification = dict()
         if documents_flags:
             for flags in documents_flags:
                 labels = flags['labels']           # lista
+                self.logger.debug("Labels da Flag = {}".format(labels))
                 notification.clear()
                 identified_flags.clear()
                 for label in self._message['labels']:
                     description = label['description'].upper()
-                    if description in labels:
+                    self.logger.debug("Label Description {}".format(description))
+                    if description in [x.upper() for x in labels]:
+                        self.logger.info("Found Label {}".format(description))
                         identified_flags.append(label)
                 if identified_flags:
                     notification['identified_flags'] = identified_flags
                     notification['animal_id'] = self._message['_id']
-                    notification['flags'] = flags['_id']
-                try:
-                    self.connection_db.create(notification, collections['Notification'])
-                except Exception as e:
-                    self.logger.error(e)
+                    notification['flags'] = flags
+                    notification['read'] = False
+                    self.logger.info("Criando notificação = {}".format(notification))
+                    try:
+                        self.connection_db.create(notification, collection_notification)
+                    except Exception as e:
+                        self.logger.error(e)
 

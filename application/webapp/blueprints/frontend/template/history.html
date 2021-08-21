@@ -17,7 +17,6 @@
                 <th>Labels Notificadas</th>
                 <th>Labels Pesquisadas</th>
                 <th>Possível Identificação</th>
-                <th>Ação</th>
             </tr>
         </thead>
         <tbody>
@@ -47,9 +46,6 @@
                 </td>
                 <td>
                     {{ document['flags']['animal'] }}<br>
-                </td>
-                <td>
-                    <a href='/notification?action=1&_id={{ _id }}'>Marcar como Lida</a>
                 </td>
             </tr>
             {% endfor %}
