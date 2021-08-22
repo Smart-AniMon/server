@@ -8,34 +8,34 @@
     <h1>{{ title }}</h1>
     <div class="row">
     <div class="col-md-4">
-        {{ wtf.quick_form(form, button_map={'inserir_flag':'primary'}) }}
+        {{ wtf.quick_form(form, button_map={'inserir_label':'primary'}) }}
     <hr>
     {{ pagination.info }}
     <table  class="table">
         <thead>
             <tr>
                 <th>#</th>
-                <th>Animal</th>
                 <th>Labels</th>
+                <th>Animal</th>
                 <th>Ação</th>                  
             </tr>
         </thead>
         <tbody>
-            {% if flags %}
-            {% for document in flags %}
+            {% if labels %}
+            {% for document in labels %}
             {% set _id = document['_id'] %}
             <tr>
                 <td>{{ loop.index + pagination.skip }}</td>
-                <td>
-                    {{ document['animal'] }} <br>
-                </td>
                 <td>
                     {% for label in document['labels'] %}
                     {{ label }} <br/>
                     {% endfor %}
                 </td>
                 <td>
-                <a href='/flag?action=2&_id={{ _id }}'>Excluir</a>
+                    {{ document['animal'] }} <br>
+                </td>
+                <td>
+                <a href='/label?action=2&_id={{ _id }}'>Excluir</a>
                 </td>
                 
             </tr>

@@ -1,6 +1,6 @@
 from flask import abort, render_template, request, redirect
 from webapp.ext.database import instance
-from .forms import FlagForm
+from .forms import FlagForm, LabelForm
 from flask_paginate import Pagination, get_page_parameter
 from bson.objectid import ObjectId
 
@@ -45,6 +45,40 @@ def not_identified():
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
     return render_template("notidentified.html",pagination=pagination, identified_animals=result, title="Animais não Identificados")
 
+def label():
+    filtro = {'active': True}
+    collection_labels = 'labels'
+    search = False
+    q = request.args.get('q')
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+
+    action = request.args.get('action')
+    if action:
+        obj = {'active': False}
+        id_doc = request.args.get('_id')
+        filter = {'_id': ObjectId(id_doc)}
+        up_document(collection_labels, filter, obj)
+
+    form = LabelForm()
+    
+    if request.method == 'POST':
+        if form.inserir_label.data:
+            labels = form.labels.data.splitlines()
+            animal = form.animal.data
+            new_label = dict()
+            new_label['labels'] = labels
+            new_label['animal'] = animal
+            new_label['active'] = True
+            add_document(collection_labels, new_label)
+            form.labels.data = ''
+            form.animal.data = ''
+    result = get_documents(collection_labels, filtro, (page-1)*ROWS_PER_PAGE)
+    pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
+                                    total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
+    return render_template("label.html",pagination=pagination,form=form, labels=result, title="Labels")
+
 def notification():
     collection_notifications = 'notifications'
     collection_monitored = 'monitored_animals'
@@ -73,6 +107,7 @@ def notification():
 def flag():
     filtro = {'active': True}
     collection_flags = 'flags'
+    collection_labels = 'labels'
     search = False
     q = request.args.get('q')
     if q:
@@ -87,18 +122,19 @@ def flag():
         up_document(collection_flags, filter, obj)
    
     form = FlagForm()
+    labels = get_all(collection_labels, filtro)
+    form.animals.choices = [(label['_id'], label['animal']) for label in labels]
     
     if request.method == 'POST':
         if form.inserir_flag.data:
-            labels = form.labels.data.splitlines()
-            animal = form.animal.data
+            obj = {'_id': form.animals.data}
+            label = get_one_document(collection_labels, obj)
             new_flag = dict()
-            new_flag['labels'] = labels
-            new_flag['animal'] = animal
+            new_flag['labels'] = label['labels']
+            new_flag['animal'] = label['animal']
             new_flag['active'] = True
             add_document(collection_flags, new_flag)
-            form.labels.data = ''
-            form.animal.data = ''
+            form.animals.data = ''
     result = get_documents(collection_flags,filtro, (page-1)*ROWS_PER_PAGE)
     
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
@@ -139,3 +175,8 @@ def get_one_document(collection: str, filter: object):
     if filter is None:
         return instance.db[collection].find_one()
     return instance.db[collection].find_one(filter)
+
+def get_all(collection: str, filter: object):
+    if filter is None:
+        return instance.db[collection].find()
+    return instance.db[collection].find(filter)
