@@ -21,10 +21,11 @@
             {% for document in identified_animals %}
             {% if document.identified %}
             {% set file = "resources/{}.jpg".format(document._id) %}
+            {% set _id = document['_id'] %}
             <tr>
                 <td>{{ loop.index + pagination.skip }}</td>
                 <td>
-                    <a href="{{ url_for('static', filename = file) }}">
+                    <a href='/animal?_id={{ _id }}&back=identified'>
                     <img src= "{{ url_for('static', filename = file) }}" alt="image" width="120" height="90">
                     </a>
                 </td>

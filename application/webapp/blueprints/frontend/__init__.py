@@ -2,16 +2,20 @@ from flask import Blueprint
 
 from .views import (index, monitored, identified, 
                     not_identified, notification, 
-                    history, flag, label)
+                    history, flag, label, classified,
+                    animal)
 
 bp = Blueprint("frontend", __name__, template_folder="template")
 
 bp.add_url_rule("/", view_func=index)
 bp.add_url_rule(
-    "/monitored", view_func=monitored, endpoint="monitored"
+    "/monitored", view_func=monitored, endpoint="monitored", methods=['GET','POST']
 )
 bp.add_url_rule(
     "/identified", view_func=identified, endpoint="identified"
+)
+bp.add_url_rule(
+    "/classified", view_func=classified, endpoint="classified"
 )
 bp.add_url_rule(
     "/not-identified", view_func=not_identified, endpoint="not_identified"
@@ -27,6 +31,9 @@ bp.add_url_rule(
 )
 bp.add_url_rule(
     "/history", view_func=history, endpoint="history",
+)
+bp.add_url_rule(
+    "/animal", view_func=animal, endpoint="animal", methods=['GET','POST']
 )
 
 

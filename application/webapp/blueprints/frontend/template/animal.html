@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+
+     {% block jumbotron %}
+
+    <h1>{{ title }}</h1>
+    <div class="row">
+        <div class="col-md-6">
+                {% set file = "resources/{}.jpg".format(monitored_animal._id) %}
+                <a href="{{ url_for('static', filename = file) }}">
+                <img src= "{{ url_for('static', filename = file) }}" alt="image" width="520" height="490">
+                </a>
+        </div>
+        <div class="col-md-6">
+            <div class="row">
+                <table  class="table">
+                    <thead>
+                        <tr>
+                            <th>Dados do monitoramento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>Identificação do Módulo = </b>{{ monitored_animal.id }} <br>
+                                <b>Localização = </b><br>Latitude({{ monitored_animal.localization.latitude }})<br>Longitude({{ monitored_animal.localization.longitude }}) <br>
+                                <b>Data da captura = </b>{{ monitored_animal.capture_date }} <br>
+                                <b>Temperatura do Ambiente (°C) = </b>{{ monitored_animal.temperature }} <br>
+                                <b>Umidade do Ambiente (%) = </b>{{ monitored_animal.humidity }} <br>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <table  class="table">
+                    <thead>
+                        <tr>
+                            <th>Dados da identificação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                {% if identified_animal.identified %}
+                                <b>Identificado como Animal = </b> Sim <br>
+                                <b>Labels Identificadas = </b>
+                                {% for label in identified_animal.identified_labels %}
+                                <br>Descrição = {{ label['description'] }} - Score = {{ "{:.2f}%".format(label['score']*100) }}
+                                {% endfor %}
+                                {% else %}
+                                <b>Identificado como Animal = </b> Não <br>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <table  class="table">
+                    <thead>
+                        <tr>
+                            <th>Dados da Classificação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                {% if identified_animal.classified %}
+                                <b>Animal classificado = </b> {{ identified_animal.animal }} <br>
+                                <b>Labels Classificadas = </b>
+                                {% for label in identified_animal.classified_labels %}
+                                <br>Descrição = {{ label['description'] }} - Score = {{ "{:.2f}%".format(label['score']*100) }}
+                                {% endfor %}
+                                {% else %}
+                                <b>Animal classificado = </b> Não <br>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(form, button_map={'back':'primary'}) }}
+        </div>
+    </div>
+    <br>
+    {% endblock jumbotron %}
+
+{% endblock %}

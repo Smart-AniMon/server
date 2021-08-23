@@ -146,7 +146,7 @@ class DataCore(Observer):
             self._message = message
             self._verify_subject(subject_name)
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error('Mensagem Erro {}'.format(e))
 
     def _verify_subject(self, name: str) -> None:
         collection = collections[name]
@@ -182,20 +182,23 @@ class DataCore(Observer):
     def _catalog(self, message: dict) -> dict:
         collection = collections['Label']
         documents = self.connection_db.read({'active': True}, collection)
-        documents_list = list(documents)
+        full_labels = list(documents)
         classified_labels = []
-        full_labels = []
-        for document in documents_list:
-            full_labels.append(document['labels'])
         message_labels = message['labels']
+        animal = ''
         for label in message_labels:
             tipo = label['description']
             des_up = tipo.upper()
             for labels in full_labels:
-                if check_labels(des_up, labels): 
+                if check_labels(des_up, labels['labels'], True):
                     classified_labels.append(label)
+                    animal = labels['animal']
         message['classified_labels'] = classified_labels
         if classified_labels:
+            if not message['identified']:
+                message['identified'] = True
+                message['identified_labels'] = classified_labels
+            message['animal'] = animal
             message['classified'] = True
         else:
             message['classified'] = False

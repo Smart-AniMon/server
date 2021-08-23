@@ -14,3 +14,11 @@ class LabelForm(FlaskForm):
     animal = StringField('Animal', description='Infome o nome do animal relacionado.', validators=[DataRequired("O preenchimento desse campo é obrigatório")])
     inserir_label = SubmitField('Inserir')
 
+class SearchForm(FlaskForm):
+    filtro = SelectField('Campo', coerce=str, validators=[DataRequired("O preenchimento desse campo é obrigatório")])
+    value = StringField('Valor', validators=[DataRequired("O preenchimento desse campo é obrigatório")])
+    search = SubmitField('Pesquisar')
+    clear = SubmitField('Limpar filtro')
+
+class AnimalForm(FlaskForm):
+    back = SubmitField('Voltar')

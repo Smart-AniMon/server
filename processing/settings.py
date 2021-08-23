@@ -1,11 +1,12 @@
 import os
 
-####### FIM das Variáveis da aplicação. #######
+####### Inicio das Variáveis da aplicação. #######
 # Se for usar contêiner é possível configurar como variáveis de ambiente.
 
 PRODUCTION = False
 LOGGING_LEVEL = 'INFO'
 APP_PATH = '/animon/processing'
+RESOURCES_PATH = APP_PATH + '/resources'
 
 ## Configurar informações de conexão com o broker
 BROKER_HOST = 'Ip ou Host do Broker (ex. 127.0.0.1)'
@@ -24,7 +25,8 @@ MONGO_USER = 'usuario com permissão para leitura e escrita'
 MONGO_PASS = 'senha do usuario'
 MONGO_DATABASE = 'nome do database (ex. app_db)'
 
-####### FIM das Variáveis da aplicação. #######
+
+####### FIM das Variáveis da aplicação. ######
 
 
 ###############################################
@@ -34,10 +36,11 @@ MONGO_DATABASE = 'nome do database (ex. app_db)'
 if not PRODUCTION:
 	LOGGING_LEVEL = 'DEBUG'
 	APP_PATH = '.'
+	RESOURCES_PATH = os.path.abspath('../application/webapp/blueprints/frontend/static/resources')
 
 LOG_LEVEL = os.environ.get('LOGGING_LEVEL', LOGGING_LEVEL)
 APPLICATION_PATH = os.environ.get('APP_PATH', APP_PATH)
-RESOURCES = os.environ.get('RESOURCES_PATH', os.path.abspath(APPLICATION_PATH + '/resources'))
+RESOURCES = os.environ.get('RESOURCES_PATH', RESOURCES_PATH)
 
 MQTT_BROKER = {
 	'HOST' : os.environ.get('BROKER_HOST', BROKER_HOST),
@@ -67,21 +70,20 @@ DATABASE_COLLECTIONS = {
 	'Identifier': 'identified_animals',
 	'MQTTClient': 'monitored_animals',
 	'Notification': 'notifications',
-	'Flag': 'flags'
+	'Flag': 'flags',
+	'Label': 'labels'
 }
-
 
 
 # Lista de Labels que podem ser identificadas como animais
 # TODO - Pesquisar mais sobre https://storage.googleapis.com/openimages/web/index.html 
 
-ANIMAL_LABELS = ['ANIMAL',
-			     'CAT',
-				 'MAMMAL',
-				 'PANDA'
+ANIMAL_LABELS = [
+	'ANIMAL',
+	'MAMMAL'
 ]
-IDENTIFIED_LABELS_SCORE = 80.00
-FULL_LABELS_SCORE = 70.00
+IDENTIFIED_LABELS_SCORE = 70.00
+FULL_LABELS_SCORE = 60.00
 
 
 # Configuração do LOGGING

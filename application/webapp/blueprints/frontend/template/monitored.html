@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
 
      {% block jumbotron %}
 
     <h1>{{ title }}</h1>
-
+    <div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(form, button_map={'search':'primary'}) }}
+    </div>
+    </div>
     <hr>
     {{ pagination.info }}
     <table  class="table">
@@ -24,6 +29,7 @@
         <tbody>
             {% if monitored_animals %}
             {% for document in monitored_animals %}
+            {% set _id = document['_id'] %}
             <tr>
                 <td>{{ loop.index + pagination.skip }}</td>
                 <td>{{ document.id }}</td>
@@ -35,7 +41,7 @@
                 <td>{{ document.temperature }}</td>
                 <td>{{ document.humidity }}</td>
                 <td>
-                    <a href="{{ url_for('static', filename = document.image) }}">
+                    <a href='/animal?_id={{ _id }}&back=monitored'>
                     <img src= "{{ url_for('static', filename = document.image) }}" alt="image" width="90" height="60">
                     </a>
                 </td>
@@ -45,7 +51,6 @@
         </tbody>
     </table>
     {{ pagination.links }}
-
     {% endblock jumbotron %}
 
 

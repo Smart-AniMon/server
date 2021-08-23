@@ -28,7 +28,7 @@
             <tr>
                 <td>{{ loop.index + pagination.skip }}</td>
                 <td>
-                    <a href="{{ url_for('static', filename = file) }}">
+                    <a href='/animal?_id={{ _id }}&back=notification'>
                     <img src= "{{ url_for('static', filename = file) }}" alt="image" width="120" height="90">
                     </a>
                 </td>

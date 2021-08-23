@@ -7,32 +7,35 @@
     <h1>{{ title }}</h1>
 
     <hr>
-    {{ pagination.info }}
     <table  class="table">
         <thead>
             <tr>
                 <th>#</th>
                 <th>Imagem</th>
-                <th>Labels</th>                
+                <th>Labels Classificadas</th>
+                <th>Animal</th>                 
             </tr>
         </thead>
         <tbody>
-            {% if identified_animals %}
-            {% for document in identified_animals %}
-            {% if not document.identified %}
+            {% if classified_animals %}
+            {% for document in classified_animals %}
+            {% if document.classified %}
             {% set file = "resources/{}.jpg".format(document._id) %}
             {% set _id = document['_id'] %}
             <tr>
                 <td>{{ loop.index + pagination.skip }}</td>
                 <td>
-                    <a href='/animal?_id={{ _id }}&back=notidentified'>
+                    <a href='/animal?_id={{ _id }}&back=classified'>
                     <img src= "{{ url_for('static', filename = file) }}" alt="image" width="120" height="90">
                     </a>
                 </td>
                 <td>
-                {% for label in document['labels'] %}
-                <b>Descrição = </b> {{ label['description'] }}  - <b>Score =</b> {{ "{:.2f}%".format(label['score']*100) }}<br>
-                {% endfor %}
+                    {% for label in document['classified_labels'] %}
+                    <b>Descrição = </b> {{ label['description'] }}  - <b>Score =</b> {{ "{:.2f}%".format(label['score']*100) }}<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    Score <br>
                 </td>
                 
             </tr>

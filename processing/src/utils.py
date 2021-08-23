@@ -26,9 +26,12 @@ def str64_to_bytes(image_base64: str) -> bytes:
 def get_name(c : object) -> str:
     return c.__module__+'.'+c.__class__.__name__
 
-def check_labels(label: str, labels: list) -> bool:
+def check_labels(label: str, labels: list, strict_compare=False) -> bool:
     for description in labels:
-        if description.upper() in label:
+        if strict_compare:
+            if description.upper() == label:
+                return True
+        elif description.upper() in label:
             return True
     return False
 

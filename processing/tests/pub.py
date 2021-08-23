@@ -16,13 +16,13 @@ TOPIC = MQTT_BROKER['TOPIC']
 
 images = [
    'tests/zebra.jpeg',
-   #'tests/wakeupcat.jpg',
-   #'tests/l2.jpeg',
-   #'tests/l3.jpg',
-   #'tests/l.png',
-   #'tests/l5.jpg'
+   'tests/wakeupcat.jpg',
+   'tests/l2.jpeg',
+   'tests/l3.jpg',
+   'tests/l.png',
+   'tests/l5.jpg'
 ]
-
+i = 2
 for img in images:
    image = os.path.abspath(img)
 
@@ -33,17 +33,17 @@ for img in images:
 
    datetime_object = datetime.datetime.now()
    message = {
-      "id":"module1",
+      "id": "module" + str(i),
       "image": image_base64.decode('utf-8'),
       "temperature":30.0,
       "humidity":80.0,
       "localization":{
-      "latitude":"String",
-      "longitude":"String"
-   },
-   "capture_date":str(datetime_object)
+         "latitude":"String",
+         "longitude":"String"
+      },
+      "capture_date":str(datetime_object)
    }
-  
+   i = i + 1
    payload_json = json.dumps(message)
 
    credentials = {'username': USER, 'password': PASS}
