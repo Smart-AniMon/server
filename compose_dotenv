@@ -1,3 +1,4 @@
 MONGO_DATABASE=animon_db
 VISION_KEY_FILE=./vision-key.json
+WEB_APP_PORT=80
 

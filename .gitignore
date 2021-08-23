@@ -188,6 +188,7 @@ pip-selfcheck.json
 *resources
 processing/resources*
 processing/credentials/vision-key.json
+mongo/data
 *vision-key.json
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,linux,python,venv
 

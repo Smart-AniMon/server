@@ -29,12 +29,14 @@ services:
     container_name: application
     image: animon/application:1.0.1
     build: ./application
+    env_file:
+      - ./application_dotenv
     volumes:
       - resources:/animon/application/webapp/blueprints/frontend/static/resources
-      - ./application-envs:/animon/application/.env
       - ./application:/animon/application
+      - ./application_dotenv:/animon/application/.env
     ports:
-      - 80:5000
+      - ${WEB_APP_PORT}:5000
     depends_on:
       - mongo
 
