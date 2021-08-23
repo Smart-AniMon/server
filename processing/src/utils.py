@@ -26,3 +26,9 @@ def str64_to_bytes(image_base64: str) -> bytes:
 def get_name(c : object) -> str:
     return c.__module__+'.'+c.__class__.__name__
 
+def check_labels(label: str, labels: list) -> bool:
+    for description in labels:
+        if description.upper() in label:
+            return True
+    return False
+

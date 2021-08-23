@@ -16,11 +16,11 @@ TOPIC = MQTT_BROKER['TOPIC']
 
 images = [
    'tests/zebra.jpeg',
-   'tests/wakeupcat.jpg',
-   'tests/l2.jpeg',
-   'tests/l3.jpg',
-   'tests/l.png',
-   'tests/l5.jpg'
+   #'tests/wakeupcat.jpg',
+   #'tests/l2.jpeg',
+   #'tests/l3.jpg',
+   #'tests/l.png',
+   #'tests/l5.jpg'
 ]
 
 for img in images:

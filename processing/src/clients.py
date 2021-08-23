@@ -11,25 +11,21 @@ MQTTClietn - Classe para repreentar a comunicação com o broker MQTT
 from .interfaces import Subject, Observer, ConnectionDB, IdentificationAPI
 from .utils import ReturnCodesMQTT, get_name
 from settings import LOGGING, VISION_KEY_FILE, MQTT_BROKER, MONGO_CONNECT
-from settings import ANIMAL_LABELS, IDENTIFIED_LABELS_SCORE, FULL_LABELS_SCORE
 
 # External python modules
 from paho.mqtt import client as mqtt_client
 from google.cloud import vision
 from pymongo.mongo_client import MongoClient
 from pymongo.errors import DuplicateKeyError
-from urllib.parse import quote_plus
 
 # Dafault python modules
-from threading import Thread
 import logging, logging.config
 import io, os, base64, binascii, json, hashlib
 
 # Logs
 logging.config.dictConfig(LOGGING)
 
-
-class CloudVisionClient(IdentificationAPI, Thread):
+class CloudVisionClient(IdentificationAPI):
     """
     Classe que representa um Cliente para API Vision do Google.
 
@@ -43,7 +39,6 @@ class CloudVisionClient(IdentificationAPI, Thread):
         self.logger.info("Starting CloudVisionClient")
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = VISION_KEY_FILE
         self._client = vision.ImageAnnotatorClient()
-        self._identified_labels = [] 
 
     # Método da interface IdentificationAPI
     def request(self, image_identify: bytes ) -> str:
@@ -51,8 +46,6 @@ class CloudVisionClient(IdentificationAPI, Thread):
 
         # Performs label detection on the image file
         response = self._client.label_detection(image=image, max_results=50)
-        self.logger.debug("Response: \n %s" % response)
-
         if response.error.message:
             raise Exception(
                 '{}\nFor more info on error messages, check: '
@@ -63,42 +56,21 @@ class CloudVisionClient(IdentificationAPI, Thread):
         
         labels = response.label_annotations
         self.logger.debug('{}'.format(labels))
-
-        response_json = self._check(labels)
+        
+        response_json = None
+        response_dict = dict()
+        labels_list = []
+        try:
+            for label in labels:
+                labels_list.append(json.loads(vision.EntityAnnotation.to_json(label)))
+            response_dict['label_annotations'] = labels_list
+            response_json = json.dumps(response_dict)
+        except Exception as e:
+            self.logger.error('Não foi possível converter labels')
+        
         self.logger.info('{}'.format(response_json))
 
         return response_json
-
-    def _check(self, labels) -> json:
-        self.logger.info("Checking labels")
-        full_labels = []
-        self._identified_labels.clear()
-        animal = False
-        for label in labels:
-            tipo = label.description
-            score = float(label.score)*100.0
-            des_up = tipo.upper()
-            label = json.loads(vision.EntityAnnotation.to_json(label))
-            if self._exists(des_up) and score >= IDENTIFIED_LABELS_SCORE:
-                animal = True
-                self.logger.info("Found label {} with {:.2f}%".format(tipo, score))
-                self._identified_labels.append(label)
-            if score >= FULL_LABELS_SCORE:
-                full_labels.append(label)
-        response_dict = dict()
-        response_dict['identified'] = False
-        response_dict['labels'] = full_labels
-        self.logger.debug("full labels {}".format(full_labels))
-        response_dict['identified_labels'] = self._identified_labels
-        if animal:
-            response_dict['identified'] = True
-        return json.dumps(response_dict)
-    
-    def _exists(self, label: str) -> bool:
-        for description in ANIMAL_LABELS:
-            if description in label:
-                return True
-        return False
 
 class MongoDBClient(ConnectionDB):
     """

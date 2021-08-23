@@ -1,9 +1,9 @@
 from src.clients import MQTTClient, CloudVisionClient, MongoDBClient
-from src.observers import Identifier, Database, Notification
+from src.observers import Identifier, DataCore, Notification
 
 subject_consumer = MQTTClient()
 observer_subject_api = Identifier()
-observer_database = Database()
+observer_database = DataCore()
 observer_notification = Notification()
 
 vision_client = CloudVisionClient()
