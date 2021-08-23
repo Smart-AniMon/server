@@ -1,11 +1,17 @@
 from flask import abort, render_template, request, redirect, session, url_for
 from webapp.ext.database import instance
-from .forms import FlagForm, LabelForm, SearchForm, AnimalForm
+from .forms import FlagForm, LabelForm, SearchForm, AnimalForm, PreSearchForm, SearchDateForm
 from flask_paginate import Pagination, get_page_parameter
 from bson.objectid import ObjectId
+import re
 
 ROWS_PER_PAGE = 5
-filter = False
+filter_monitored = False
+pre_filter_monitored = False
+filter_classified = False
+filter_identified = False
+filter_notidentified = False
+filter_notification = False
 
 def index():
     return render_template("index.html")
@@ -13,9 +19,51 @@ def index():
 def monitored():
     fields = [
         {'filter': 'id' , 'name': 'Módulo'},
-        #{'filter': 'capture_date' , 'name': 'Data de Captura'}
+        {'filter': 'capture_date_maior' , 'name': 'Data de Captura (>=)'},
+        {'filter': 'capture_date_menor' , 'name': 'Data de Captura (>=)'}
     ]
     collection_monitored = 'monitored_animals'
+    search = False
+    q = request.args.get('q')
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    
+    form = SearchForm()
+    form.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    global filter_monitored
+    if request.method == 'POST':
+        if form.search.data:
+            session['filter_key'] = form.filtro.data
+            session['filter_value'] = form.value.data
+            filter_monitored = True
+        elif form.clear.data:
+            session['filter_key'] = ''
+            session['filter_value'] = ''
+            form.filtro.data = ''
+            form.value.data = ''
+            filter_monitored = False
+    filtro = None
+    if filter_monitored:
+        key_search = session['filter_key']
+        value_search = session['filter_value']
+        if key_search == 'id':
+            filtro = {key_search : value_search}
+        form.value.data = session['filter_value']
+        form.value.render_kw = {'disabled': 'disabled'}
+        form.search.render_kw = {'disabled': 'disabled'}
+                
+    result = get_documents(collection_monitored, filtro , (page-1)*ROWS_PER_PAGE)
+    pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
+                                    total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
+    return render_template("monitored.html",form=form, pagination=pagination, monitored_animals=result, title="Animais Monitorados")
+
+def classified():
+    fields = [
+        {'filter': 'animal' , 'name': 'Animal'},
+        {'filter': 'description' , 'name': 'Descrição da Label'},
+    ]
+    collection_identified = 'identified_animals'
     search = False
     q = request.args.get('q')
     if q:
@@ -24,64 +72,130 @@ def monitored():
 
     form = SearchForm()
     form.filtro.choices = [(field['filter'], field['name']) for field in fields]
-    global filter
+    global filter_classified
     if request.method == 'POST':
         if form.search.data:
             session['filter_key'] = form.filtro.data
             session['filter_value'] = form.value.data
-            filter = True
+            filter_classified = True
         elif form.clear.data:
             session['filter_key'] = ''
             session['filter_value'] = ''
             form.filtro.data = ''
             form.value.data = ''
-            filter = False
-    filtro = None
-    if filter: 
-        filtro = {session['filter_key'] : session['filter_value']}
+            filter_classified = False
+    filtro = {'classified': True}
+    if filter_classified:
+        key_search = session['filter_key']
+        value_search = session['filter_value']
+        list_search = []
+        if key_search == 'description':
+            documents = get_all(collection_identified, {'classified': True})
+            for document in documents:
+                for label in document['classified_labels']:
+                    if  value_search.upper() in label[key_search].upper():
+                        print('label[key_search].upper()')
+                        list_search.append(document['_id'])
+            filtro = {'_id': {'$in': list_search} }
+        elif key_search == 'animal': 
+            filtro = {session['filter_key']: re.compile(session['filter_value'], re.IGNORECASE), 'classified': True} 
         form.value.data = session['filter_value']
         form.value.render_kw = {'disabled': 'disabled'}
         form.search.render_kw = {'disabled': 'disabled'}
-    result = get_documents(collection_monitored, filtro , (page-1)*ROWS_PER_PAGE)
+    result = get_documents(collection_identified, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("monitored.html",form=form, pagination=pagination, monitored_animals=result, title="Animais Monitorados")
-
-def classified():
-    collection = 'identified_animals'
-    search = False
-    q = request.args.get('q')
-    if q:
-        search = True
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    result = get_documents(collection, {'classified': True}, (page-1)*ROWS_PER_PAGE)
-    pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
-                                    total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("classified.html",pagination=pagination, classified_animals=result, title="Animais Classificados")
+    return render_template("classified.html",form=form, pagination=pagination, classified_animals=result, title="Animais Classificados")
 
 def identified():
+    fields = [
+        {'filter': 'description' , 'name': 'Descrição'},
+    ]
     collection_identified = 'identified_animals'
     search = False
     q = request.args.get('q')
     if q:
         search = True
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    result = get_documents(collection_identified, {'identified': True}, (page-1)*ROWS_PER_PAGE)
+
+    form = SearchForm()
+    form.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    global filter_identified
+    if request.method == 'POST':
+        if form.search.data:
+            session['filter_key'] = form.filtro.data
+            session['filter_value'] = form.value.data
+            filter_identified = True
+        elif form.clear.data:
+            session['filter_key'] = ''
+            session['filter_value'] = ''
+            form.filtro.data = ''
+            form.value.data = ''
+            filter_identified = False
+    filtro = {'identified': True}
+    if filter_identified:
+        key_search = session['filter_key']
+        value_search = session['filter_value']
+        list_search = []
+        documents = get_all(collection_identified, {'identified': True})
+        for document in documents:
+            for label in document['labels']:
+                if label[key_search].upper() == value_search.upper():
+                    list_search.append(document['_id'])
+        filtro = {'_id': {'$in': list_search} } 
+        form.value.data = value_search
+        form.value.render_kw = {'disabled': 'disabled'}
+        form.search.render_kw = {'disabled': 'disabled'}
+
+    result = get_documents(collection_identified, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("identified.html",pagination=pagination, identified_animals=result, title="Animais Identificados")
+    return render_template("identified.html",form=form, pagination=pagination, identified_animals=result, title="Animais Identificados")
 
 def not_identified():
+    fields = [
+        {'filter': 'description' , 'name': 'Descrição'},
+    ]
     collection_identified = 'identified_animals'
     search = False
     q = request.args.get('q')
     if q:
         search = True
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    result = get_documents(collection_identified, {'identified': False}, (page-1)*ROWS_PER_PAGE)
+
+    form = SearchForm()
+    form.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    global filter_notidentified
+    
+    if request.method == 'POST':
+        if form.search.data:
+            session['filter_key'] = form.filtro.data
+            session['filter_value'] = form.value.data
+            filter_notidentified = True
+        elif form.clear.data:
+            session['filter_key'] = ''
+            session['filter_value'] = ''
+            form.filtro.data = ''
+            form.value.data = ''
+            filter_notidentified = False
+    filtro = {'identified': False}
+    if filter_notidentified:
+        key_search = session['filter_key']
+        value_search = session['filter_value']
+        list_search = []
+        documents = get_all(collection_identified, {'identified': False})
+        for document in documents:
+            for label in document['labels']:
+                if label[key_search].upper() == value_search.upper():
+                    list_search.append(document['_id'])
+        filtro = {'_id': {'$in': list_search} } 
+        form.value.data = value_search
+        form.value.render_kw = {'disabled': 'disabled'}
+        form.search.render_kw = {'disabled': 'disabled'}
+    result = get_documents(collection_identified, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("notidentified.html",pagination=pagination, identified_animals=result, title="Animais não Identificados")
+    return render_template("notidentified.html",form=form, pagination=pagination, identified_animals=result, title="Animais não Identificados")
 
 def label():
     filtro = {'active': True}
@@ -132,14 +246,9 @@ def notification():
         id_doc = request.args.get('_id')
         filter = {'_id': ObjectId(id_doc)}
         up_document(collection_notifications, filter, obj)
-    notifications = get_documents(collection_notifications, {'read': False}, (page-1)*ROWS_PER_PAGE)
-    result = []
-    for notification in notifications:
-        monitored_animal = get_one_document(collection_monitored, {'_id': notification['animal_id']})
-        notification['date'] = monitored_animal['capture_date']
-        result.append(notification)
+    result = get_documents(collection_notifications, {'read': False}, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
-                                    total=notifications.count(), search=search, css_framework='bootstrap3', record_name='result')
+                                    total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
     return render_template("notification.html", pagination=pagination, notifications=result, title="Notificações")
 
 def flag():
@@ -180,6 +289,11 @@ def flag():
     return render_template("flag.html",pagination=pagination, form=form, flags=result, title="Flags")
 
 def history():
+    fields = [
+        {'filter': 'description' , 'name': 'Labels Encontradas'},
+        {'filter': 'labels' , 'name': 'Labels Pesquisadas'},
+        {'filter': 'animal' , 'name': 'Possível Identificação'},
+    ]
     collection_notifications = 'notifications'
     collection_monitored = 'monitored_animals'
     search = False
@@ -187,15 +301,9 @@ def history():
     if q:
         search = True
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    notifications = get_documents(collection_notifications, None, (page-1)*ROWS_PER_PAGE)
-    result = []
-    for notification in notifications:
-        monitored_animal = get_one_document(collection_monitored, {'_id': notification['animal_id']})
-        notification['date'] = monitored_animal['capture_date']
-        result.append(notification)
-
+    result = get_documents(collection_notifications, None, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
-                                    total=notifications.count(), search=search, css_framework='bootstrap3', record_name='result')
+                                    total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
     return render_template("history.html", pagination=pagination, notifications=result, title="Histórico de Notificações")
 
 def animal():

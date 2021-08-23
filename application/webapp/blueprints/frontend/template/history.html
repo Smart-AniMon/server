@@ -24,10 +24,11 @@
             {% for document in notifications %}
             {% set file = "resources/{}.jpg".format(document['animal_id']) %}
             {% set _id = document['_id'] %}
+            {% set animal_id = document['animal_id'] %}
             <tr>
                 <td>{{ loop.index + pagination.skip }}</td>
                 <td>
-                    <a href='/animal?_id={{ _id }}&back=history'>
+                    <a href='/animal?_id={{ animal_id }}&back=history'>
                     <img src= "{{ url_for('static', filename = file) }}" alt="image" width="120" height="90">
                     </a>
                 </td>

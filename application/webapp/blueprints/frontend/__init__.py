@@ -12,19 +12,19 @@ bp.add_url_rule(
     "/monitored", view_func=monitored, endpoint="monitored", methods=['GET','POST']
 )
 bp.add_url_rule(
-    "/identified", view_func=identified, endpoint="identified"
+    "/identified", view_func=identified, endpoint="identified", methods=['GET','POST']
 )
 bp.add_url_rule(
-    "/classified", view_func=classified, endpoint="classified"
+    "/classified", view_func=classified, endpoint="classified", methods=['GET','POST']
 )
 bp.add_url_rule(
-    "/not-identified", view_func=not_identified, endpoint="not_identified"
+    "/not-identified", view_func=not_identified, endpoint="not_identified", methods=['GET','POST']
 )
 bp.add_url_rule(
     "/label", view_func=label, endpoint="label", methods=['GET','POST']
 )
 bp.add_url_rule(
-    "/notification", view_func=notification, endpoint="notification"
+    "/notification", view_func=notification, endpoint="notification", methods=['GET','POST']
 )
 bp.add_url_rule(
     "/flag", view_func=flag, endpoint="flag", methods=['GET','POST']

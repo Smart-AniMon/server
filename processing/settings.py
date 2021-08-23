@@ -75,6 +75,7 @@ DATABASE_COLLECTIONS = {
 }
 
 
+
 # Lista de Labels que podem ser identificadas como animais
 # TODO - Pesquisar mais sobre https://storage.googleapis.com/openimages/web/index.html 
 

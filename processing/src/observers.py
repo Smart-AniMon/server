@@ -67,6 +67,7 @@ class Identifier(Observer, Subject):
             response = self._identification_api.request(self._image_content)
             response_dict = self._check_response(response)
             response_dict['_id'] = message['_id']
+            response_dict['capture_date'] = message['capture_date']
             self.logger.debug("message is {} object".format(type(response_dict)))
         except Exception as e:
             self.logger.error(e)
@@ -270,6 +271,7 @@ class Notification(Observer):
                 if identified_flags:
                     notification['identified_flags'] = identified_flags
                     notification['animal_id'] = self._message['_id']
+                    notification['date'] = self._message['capture_date']
                     notification['flags'] = flags
                     notification['read'] = False
                     self.logger.info("Criando notificação = {}".format(notification))

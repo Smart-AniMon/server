@@ -14,5 +14,5 @@ EXTENSIONS = [
 
 TITLE = "Smart AniMon"
 
-# Host -> nome do contêiner do mongo
-MONGO_URI="mongodb://user_application:pass_application@mongo/animon_db"
+# host:port -> servidor e porta do MongoDB Server
+MONGO_URI="mongodb://user_application:pass_application@host:port/animon_db"
