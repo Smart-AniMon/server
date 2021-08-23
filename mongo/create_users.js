@@ -1,7 +1,7 @@
 db.createUser(
         {
-            user: "user_processing",
-            pwd: "pass_processing",
+            user: "animon_processing",
+            pwd: "animonproc",
             roles: [
                 {
                     role: "readWrite",
@@ -13,8 +13,8 @@ db.createUser(
 
 db.createUser(
         {
-            user: "user_application",
-            pwd: "pass_application",
+            user: "animon_application",
+            pwd: "animonapp",
             roles: [
                 {
                     role: "readWrite",
@@ -23,3 +23,4 @@ db.createUser(
             ]
         }
 );
+

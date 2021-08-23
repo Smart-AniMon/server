@@ -15,24 +15,23 @@ services:
 
   processing:
     container_name: processing
-    image: animon/processing:1.0.0
+    image: animon/processing:1.0.1
     build: ./processing
     env_file:
-      - ./processing/env_vars
+      - ./processing-envs
     volumes:
-      - resources:/animon/resources
-      - ${VISION_KEY_FILE}:/animon/credentials/vision-key.json
+      - resources:/animon/processing/resources
+      - ${VISION_KEY_FILE}:/animon/processing/credentials/vision-key.json
     depends_on:
       - mongo
 
   application:
     container_name: application
-    image: animon/application:1.0.0
+    image: animon/application:1.0.1
     build: ./application
-    env_file:
-      - ./application/env_vars
     volumes:
       - resources:/animon/application/webapp/blueprints/frontend/static/resources
+      - ./application-envs:/animon/application/.env
       - ./application:/animon/application
     ports:
       - 80:5000

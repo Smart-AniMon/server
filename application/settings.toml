@@ -13,6 +13,3 @@ EXTENSIONS = [
 ]
 
 TITLE = "Smart AniMon"
-
-# host:port -> servidor e porta do MongoDB Server
-MONGO_URI="mongodb://user_application:pass_application@host:port/animon_db"

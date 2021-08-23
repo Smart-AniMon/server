@@ -1,1 +1,1 @@
-docker build --tag="animon/processing:1.0.0" .
+docker build --tag="animon/processing:1.0.1" .

@@ -1,14 +1,14 @@
 import os
 
-####### Inicio das Variáveis da aplicação. #######
+####### FIM das Variáveis da aplicação. #######
 # Se for usar contêiner é possível configurar como variáveis de ambiente.
 
-PRODUCTION = False
+PRODUCTION = True
 LOGGING_LEVEL = 'INFO'
 APP_PATH = '/animon/processing'
 RESOURCES_PATH = APP_PATH + '/resources'
 
-## Configurar informações de conexão com o broker
+# Configurar informações de conexão com o broker
 BROKER_HOST = 'Ip ou Host do Broker (ex. 127.0.0.1)'
 BROKER_PORT = 'Porta do Broker (ex. 1883)'
 BROKER_USER = 'usuario com permissão para subscribe'
@@ -25,8 +25,15 @@ MONGO_USER = 'usuario com permissão para leitura e escrita'
 MONGO_PASS = 'senha do usuario'
 MONGO_DATABASE = 'nome do database (ex. app_db)'
 
+# Opcional
+DESC_ANIMAL_LABELS = [
+	'ANIMAL',
+	'MAMMAL'
+]
+SCORE_ANIMAL_LABELS = 70.00
+SCORE_ALL_LABELS = 60.00
 
-####### FIM das Variáveis da aplicação. ######
+####### FIM das Variáveis da aplicação. #######
 
 
 ###############################################
@@ -79,12 +86,13 @@ DATABASE_COLLECTIONS = {
 # Lista de Labels que podem ser identificadas como animais
 # TODO - Pesquisar mais sobre https://storage.googleapis.com/openimages/web/index.html 
 
-ANIMAL_LABELS = [
-	'ANIMAL',
-	'MAMMAL'
-]
-IDENTIFIED_LABELS_SCORE = 70.00
-FULL_LABELS_SCORE = 60.00
+labels = os.environ.get("DESC_ANIMAL_LABELS")
+if labels:
+    ANIMAL_LABELS = labels.split(',')
+else:
+    ANIMAL_LABELS = DESC_ANIMAL_LABELS
+IDENTIFIED_LABELS_SCORE = float(os.environ.get('SCORE_ANIMAL_LABELS', SCORE_ANIMAL_LABELS))
+FULL_LABELS_SCORE = float(os.environ.get('SCORE_ALL_LABELS', SCORE_ALL_LABELS))
 
 
 # Configuração do LOGGING

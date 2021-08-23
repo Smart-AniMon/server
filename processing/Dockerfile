@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM python:3.7-slim
 
-ARG APP_PATH=/animon
+ARG APP_PATH=/animon/processing
 
 WORKDIR $APP_PATH
 
