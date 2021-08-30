@@ -1,1 +1,1 @@
-docker build --tag="animon/application:1.0.2" .
+docker build --tag="animon/application:1.0.4" .

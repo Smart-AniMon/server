@@ -58,7 +58,11 @@ def monitored():
             filter_search_monitored = False
         elif form_date.search_date.data:
             filter_search_monitored = True
-            session['filter_value'] = form_date.value.data
+            value = form_date.value.data
+            if value is None:
+                value = datetime.datetime.now()
+            date_format = value.isoformat()
+            session['filter_value'] = datetime.datetime.fromisoformat(date_format)
         elif form_string.search.data:
             filter_search_monitored = True
             session['filter_value'] = form_string.value.data
@@ -88,6 +92,9 @@ def monitored():
             form_date.value.data = value_search
             #form_date.value.render_kw = {'disabled': 'disabled'}
             #form_date.search_date.render_kw = {'disabled': 'disabled'}
+            
+            if value_search is None:
+                value_search = datetime.datetime.now()
             if key_search == 'capture_date_maior':
                 date_format = value_search.isoformat()
                 d = datetime.datetime.fromisoformat(date_format)
@@ -374,7 +381,11 @@ def history():
             filter_search_notification = False
         elif form_date.search_date.data:
             filter_search_notification = True
-            session['filter_value'] = form_date.value.data
+            value = form_date.value.data
+            if value is None:
+                value = datetime.datetime.now()
+            date_format = value.isoformat()
+            session['filter_value'] = datetime.datetime.fromisoformat(date_format)
         elif form_string.search.data:
             filter_search_notification = True
             session['filter_value'] = form_string.value.data
@@ -429,6 +440,9 @@ def history():
             form_date.value.data = value_search
             #form_date.value.render_kw = {'disabled': 'disabled'}
             #form_date.search_date.render_kw = {'disabled': 'disabled'}
+            if value_search is None:
+                value_search = datetime.datetime.now()
+                print(value_search)
             if key_search == 'capture_date_maior':
                 date_format = value_search.isoformat()
                 d = datetime.datetime.fromisoformat(date_format)
