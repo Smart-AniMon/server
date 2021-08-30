@@ -3,15 +3,21 @@ from webapp.ext.database import instance
 from .forms import FlagForm, LabelForm, SearchForm, AnimalForm, PreSearchForm, SearchDateForm
 from flask_paginate import Pagination, get_page_parameter
 from bson.objectid import ObjectId
+
+import datetime
 import re
 
 ROWS_PER_PAGE = 5
 filter_monitored = False
-pre_filter_monitored = False
+filter_date_monitored = False
+filter_search_monitored = False
 filter_classified = False
 filter_identified = False
 filter_notidentified = False
 filter_notification = False
+filter_date_notification = False
+filter_search_notification = False
+
 
 def index():
     return render_template("index.html")
@@ -20,7 +26,7 @@ def monitored():
     fields = [
         {'filter': 'id' , 'name': 'Módulo'},
         {'filter': 'capture_date_maior' , 'name': 'Data de Captura (>=)'},
-        {'filter': 'capture_date_menor' , 'name': 'Data de Captura (>=)'}
+        {'filter': 'capture_date_menor' , 'name': 'Data de Captura (<=)'}
     ]
     collection_monitored = 'monitored_animals'
     search = False
@@ -29,34 +35,74 @@ def monitored():
         search = True
     page = request.args.get(get_page_parameter(), type=int, default=1)
     
-    form = SearchForm()
+    form = PreSearchForm()
+    form_date = SearchDateForm()
+    form_string = SearchForm()
+    
     form.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    form_date.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    form_string.filtro.choices = [(field['filter'], field['name']) for field in fields]
     global filter_monitored
+    global filter_date_monitored
+    global filter_search_monitored
     if request.method == 'POST':
-        if form.search.data:
+        if form.search_pre.data:
             session['filter_key'] = form.filtro.data
-            session['filter_value'] = form.value.data
             filter_monitored = True
-        elif form.clear.data:
+        elif form_date.clear_date.data or form_string.clear.data:
             session['filter_key'] = ''
             session['filter_value'] = ''
             form.filtro.data = ''
-            form.value.data = ''
             filter_monitored = False
+            filter_date_monitored = False
+            filter_search_monitored = False
+        elif form_date.search_date.data:
+            filter_search_monitored = True
+            session['filter_value'] = form_date.value.data
+        elif form_string.search.data:
+            filter_search_monitored = True
+            session['filter_value'] = form_string.value.data
     filtro = None
     if filter_monitored:
         key_search = session['filter_key']
-        value_search = session['filter_value']
         if key_search == 'id':
-            filtro = {key_search : value_search}
-        form.value.data = session['filter_value']
-        form.value.render_kw = {'disabled': 'disabled'}
-        form.search.render_kw = {'disabled': 'disabled'}
+            form_string.filtro.data = key_search
+            form_string.filtro.render_kw = {'disabled': 'disabled'}
+        else:
+            filter_date_monitored = True
+            form_date.filtro.data = key_search
+            form_date.filtro.render_kw = {'disabled': 'disabled'}
+    if filter_search_monitored:
+        value_search = session['filter_value']
+        key_search = session['filter_key']
+        if key_search == 'id':
+            form_string.filtro.data = key_search
+            form_string.filtro.render_kw = {'disabled': 'disabled'}
+            form_string.value.data = value_search
+            form_string.value.render_kw = {'disabled': 'disabled'}
+            form_string.search.render_kw = {'disabled': 'disabled'}
+            filtro = {key_search : re.compile(value_search, re.IGNORECASE)}
+        else:
+            form_date.filtro.data = key_search
+            form_date.filtro.render_kw = {'disabled': 'disabled'}
+            form_date.value.data = value_search
+            #form_date.value.render_kw = {'disabled': 'disabled'}
+            #form_date.search_date.render_kw = {'disabled': 'disabled'}
+            if key_search == 'capture_date_maior':
+                date_format = value_search.isoformat()
+                d = datetime.datetime.fromisoformat(date_format)
+                filtro = {'capture_date' : {'$gte': d}}
+            else:
+                date_format = value_search.isoformat()
+                d = datetime.datetime.fromisoformat(date_format)
+                filtro = {'capture_date' : {'$lte': d}}
                 
     result = get_documents(collection_monitored, filtro , (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("monitored.html",form=form, pagination=pagination, monitored_animals=result, title="Animais Monitorados")
+    return render_template("monitored.html",form=form,form_date=form_date, form_string=form_string, filter_monitored=filter_monitored,
+                                            filter_date=filter_date_monitored, pagination=pagination, monitored_animals=result, 
+                                            title="Capturas Realizadas")
 
 def classified():
     fields = [
@@ -100,6 +146,7 @@ def classified():
         elif key_search == 'animal': 
             filtro = {session['filter_key']: re.compile(session['filter_value'], re.IGNORECASE), 'classified': True} 
         form.value.data = session['filter_value']
+        form.filtro.render_kw = {'disabled': 'disabled'}
         form.value.render_kw = {'disabled': 'disabled'}
         form.search.render_kw = {'disabled': 'disabled'}
     result = get_documents(collection_identified, filtro, (page-1)*ROWS_PER_PAGE)
@@ -146,6 +193,7 @@ def identified():
         form.value.data = value_search
         form.value.render_kw = {'disabled': 'disabled'}
         form.search.render_kw = {'disabled': 'disabled'}
+        form.filtro.render_kw = {'disabled': 'disabled'}
 
     result = get_documents(collection_identified, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
@@ -195,7 +243,7 @@ def not_identified():
     result = get_documents(collection_identified, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("notidentified.html",form=form, pagination=pagination, identified_animals=result, title="Animais não Identificados")
+    return render_template("notidentified.html",form=form, pagination=pagination, identified_animals=result, title="Não Identificadas")
 
 def label():
     filtro = {'active': True}
@@ -229,7 +277,7 @@ def label():
     result = get_documents(collection_labels, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("label.html",pagination=pagination,form=form, labels=result, title="Labels")
+    return render_template("label.html",pagination=pagination,form=form, labels=result, title="Labels para Classificação")
 
 def notification():
     collection_notifications = 'notifications'
@@ -286,25 +334,117 @@ def flag():
     
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("flag.html",pagination=pagination, form=form, flags=result, title="Flags")
+    return render_template("flag.html",pagination=pagination, form=form, flags=result, title="Flags para Notificação")
 
 def history():
     fields = [
         {'filter': 'description' , 'name': 'Labels Encontradas'},
         {'filter': 'labels' , 'name': 'Labels Pesquisadas'},
-        {'filter': 'animal' , 'name': 'Possível Identificação'},
+        {'filter': 'animal' , 'name': 'Animal'},
+        {'filter': 'capture_date_maior' , 'name': 'Data de Captura (>=)'},
+        {'filter': 'capture_date_menor' , 'name': 'Data de Captura (<=)'}
     ]
     collection_notifications = 'notifications'
-    collection_monitored = 'monitored_animals'
     search = False
     q = request.args.get('q')
     if q:
         search = True
+
+    form = PreSearchForm()
+    form_date = SearchDateForm()
+    form_string = SearchForm()
+
+    form.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    form_date.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    form_string.filtro.choices = [(field['filter'], field['name']) for field in fields]
+    
+    global filter_notification
+    global filter_date_notification
+    global filter_search_notification
+    if request.method == 'POST':
+        if form.search_pre.data:
+            session['filter_key'] = form.filtro.data
+            filter_notification = True
+        elif form_date.clear_date.data or form_string.clear.data:
+            session['filter_key'] = ''
+            session['filter_value'] = ''
+            form.filtro.data = ''
+            filter_notification = False
+            filter_date_notification = False
+            filter_search_notification = False
+        elif form_date.search_date.data:
+            filter_search_notification = True
+            session['filter_value'] = form_date.value.data
+        elif form_string.search.data:
+            filter_search_notification = True
+            session['filter_value'] = form_string.value.data
+    filtro = None
+    if filter_notification:
+        key_search = session['filter_key']
+        if key_search == 'description' or key_search == 'labels' or key_search == 'animal':
+            form_string.filtro.data = key_search
+            form_string.filtro.render_kw = {'disabled': 'disabled'}
+        else:
+            filter_date_notification = True
+            form_date.filtro.data = key_search
+            form_date.filtro.render_kw = {'disabled': 'disabled'}
+    if filter_search_notification:
+        value_search = session['filter_value']
+        key_search = session['filter_key']
+        if key_search == 'description' or key_search == 'labels' or key_search == 'animal':
+            form_string.filtro.data = key_search
+            form_string.filtro.render_kw = {'disabled': 'disabled'}
+            form_string.value.data = value_search
+            #form_string.value.render_kw = {'disabled': 'disabled'}
+            #form_string.search.render_kw = {'disabled': 'disabled'}
+            if key_search == 'description':
+                list_search = []
+                documents = get_all(collection_notifications, None)
+                for document in documents:
+                    for label in document['identified_flags']:
+                        if value_search.upper() in label[key_search].upper():
+                            list_search.append(ObjectId(document['_id']))
+                filtro = {'_id': {'$in': list_search} }
+            elif key_search == 'labels':
+                list_search = []
+                documents = get_all(collection_notifications, None)
+                for document in documents:
+                    flag = document['flags']
+                    for label in flag[key_search]:
+                        if value_search.upper() in label.upper():
+                            list_search.append(ObjectId(document['_id']))
+                filtro = {'_id': {'$in': list_search} }
+            elif key_search == 'animal':
+                list_search = []
+                documents = get_all(collection_notifications, None)
+                for document in documents:
+                    flag = document['flags']
+                    animal = flag[key_search]
+                    if value_search.upper() in animal.upper():
+                        list_search.append(ObjectId(document['_id']))
+                filtro = {'_id': {'$in': list_search} }
+        else:
+            form_date.filtro.data = key_search
+            form_date.filtro.render_kw = {'disabled': 'disabled'}
+            form_date.value.data = value_search
+            #form_date.value.render_kw = {'disabled': 'disabled'}
+            #form_date.search_date.render_kw = {'disabled': 'disabled'}
+            if key_search == 'capture_date_maior':
+                date_format = value_search.isoformat()
+                d = datetime.datetime.fromisoformat(date_format)
+                filtro = {'date' : {'$gte': d}}
+            else:
+                date_format = value_search.isoformat()
+                d = datetime.datetime.fromisoformat(date_format)
+                filtro = {'date' : {'$lte': d}}
+
     page = request.args.get(get_page_parameter(), type=int, default=1)
-    result = get_documents(collection_notifications, None, (page-1)*ROWS_PER_PAGE)
+    result = get_documents(collection_notifications, filtro, (page-1)*ROWS_PER_PAGE)
     pagination = Pagination(page=page, per_page=ROWS_PER_PAGE, 
                                     total=result.count(), search=search, css_framework='bootstrap3', record_name='result')
-    return render_template("history.html", pagination=pagination, notifications=result, title="Histórico de Notificações")
+    return render_template("history.html", form=form,form_date=form_date, form_string=form_string, filter_monitored=filter_notification,
+                                           filter_date=filter_date_notification, pagination=pagination, notifications=result, 
+                                           title="Histórico de Notificações")
 
 def animal():
     collection_monitored = 'monitored_animals'

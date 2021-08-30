@@ -30,7 +30,7 @@ bp.add_url_rule(
     "/flag", view_func=flag, endpoint="flag", methods=['GET','POST']
 )
 bp.add_url_rule(
-    "/history", view_func=history, endpoint="history",
+    "/history", view_func=history, endpoint="history", methods=['GET','POST']
 )
 bp.add_url_rule(
     "/animal", view_func=animal, endpoint="animal", methods=['GET','POST']

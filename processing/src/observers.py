@@ -12,6 +12,8 @@ from settings import DATABASE_COLLECTIONS as collections
 from settings import (FULL_LABELS_SCORE, ANIMAL_LABELS, IDENTIFIED_LABELS_SCORE, 
                       LOGGING, RESOURCES)
 
+import datetime
+
 
 import logging, logging.config
 import json, io, os
@@ -142,6 +144,7 @@ class DataCore(Observer):
             self.logger.debug("Subject: {}".format(subject_name))
             if subject_name == "MQTTClient":
                 message = self._save_image(message)
+                message['capture_date'] = datetime.datetime.strptime(message['capture_date'], '%Y-%m-%d %H:%M:%S.%f')
             elif subject_name == "Identifier":
                 message = self._catalog(message)
             self._message = message
@@ -271,7 +274,7 @@ class Notification(Observer):
                 if identified_flags:
                     notification['identified_flags'] = identified_flags
                     notification['animal_id'] = self._message['_id']
-                    notification['date'] = self._message['capture_date']
+                    notification['date'] = datetime.datetime.strptime(self._message['capture_date'], '%Y-%m-%d %H:%M:%S.%f')
                     notification['flags'] = flags
                     notification['read'] = False
                     self.logger.info("Criando notificação = {}".format(notification))

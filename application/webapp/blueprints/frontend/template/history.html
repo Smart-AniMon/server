@@ -1,11 +1,26 @@
 {% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
 
      {% block jumbotron %}
 
     <h1>{{ title }}</h1>
-
+    <div class="row">
+        {% if filter_monitored and filter_date %}
+            <div class="col-md-4">
+                {{ wtf.quick_form(form_date, button_map={'search_date':'primary'}) }}
+            </div>
+        {% elif filter_monitored%}
+            <div class="col-md-4">
+                {{ wtf.quick_form(form_string, button_map={'search':'primary'}) }}
+            </div>
+        {% else %}
+            <div class="col-md-4">
+                {{ wtf.quick_form(form, button_map={'search_pre':'primary'}) }}
+            </div>
+        {% endif %}
+    </div>
     <hr>
     {{ pagination.info }}
     <table  class="table">
@@ -16,7 +31,7 @@
                 <th>Data</th>
                 <th>Labels Encontradas</th>
                 <th>Labels Pesquisadas</th>
-                <th>Possível Identificação</th>
+                <th>Animal</th>
             </tr>
         </thead>
         <tbody>

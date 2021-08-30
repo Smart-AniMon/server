@@ -1,8 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, SelectField, SelectMultipleField, DateField, \
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, SelectField, SelectMultipleField, \
     IntegerField, BooleanField
 from wtforms.validators import DataRequired
 from bson.objectid import ObjectId
+from datetime import date
+from wtforms.fields.html5 import DateField
 
 class FlagForm(FlaskForm):
     animals = SelectField('Animal', coerce=ObjectId, validators=[DataRequired("O preenchimento desse campo é obrigatório")])
@@ -16,7 +18,7 @@ class LabelForm(FlaskForm):
 
 class PreSearchForm(FlaskForm):
     filtro = SelectField('Campo', coerce=str, validators=[DataRequired("O preenchimento desse campo é obrigatório")])
-    search = SubmitField('Pesquisar')
+    search_pre = SubmitField('Pesquisar')
 
 class SearchForm(FlaskForm):
     filtro = SelectField('Campo', coerce=str, validators=[DataRequired("O preenchimento desse campo é obrigatório")])
@@ -26,9 +28,9 @@ class SearchForm(FlaskForm):
 
 class SearchDateForm(FlaskForm):
     filtro = SelectField('Campo', coerce=str, validators=[DataRequired("O preenchimento desse campo é obrigatório")])
-    value  = DateField('Indique a data no formato (dd/mm/yyyy)',format='%d/%m/%Y')
-    search = SubmitField('Filtrar')
-    clear = SubmitField('Limpar filtro')
+    value  = DateField('Indique a data',format='%Y-%m-%d',default=date.today)
+    search_date = SubmitField('Filtrar')
+    clear_date = SubmitField('Limpar filtro')
 
 class AnimalForm(FlaskForm):
     back = SubmitField('Voltar')
