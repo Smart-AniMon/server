@@ -64,3 +64,7 @@ A aplicação se conecta com o banco de dados MongoDB para recuperar as informa�
     ```
 
 2. A aplicação web estará disponível, via navegador, na URL `http://127.0.0.1:5000/`.
+
+## Sugestão de Melhorias
+
+A aplicação web Flask foi desenvolvida de forma simples para prova de conceito. Para uma futura versão, deve-se estudar a substituição para outra arquitetura e framework como, por exemplo, API REST e [React JS](https://pt-br.reactjs.org/).
