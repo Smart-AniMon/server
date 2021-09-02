@@ -6,11 +6,11 @@ A aplicação se conecta com o banco de dados MongoDB para recuperar as informa�
 
 # Instalação
 
-## Pré-requisitos
+## Requisitos
 
 * Git.
 * Python 3.7 ou superior
-* Credenciais para leitura e escrita em um servidor MongoDB.
+* Credenciais para leitura e escrita em uma base MongoDB.
 
 ## Download e Configurações.
 
@@ -35,7 +35,7 @@ A aplicação se conecta com o banco de dados MongoDB para recuperar as informa�
     $ export PYTHONPATH="$PWD"
 	```
 
-5. Crie o arquivo `.env` com base no template `./application_dotenv` altere as informações da variável `FLASK_MONGO_URI` para conexão com o servidor MongoDB.
+5. Crie o arquivo `.env` com base no template `./application_dotenv` e altere as informações da variável `FLASK_MONGO_URI` para conexão com a base MongoDB.
     ```bash
     $ cp ./application_dotenv .env
     $ vim .env

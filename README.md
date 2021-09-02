@@ -2,14 +2,14 @@
 
 Este repositório contém todo o código fonte e instruções de implantação do componente `Server` do Sistema Smart AniMon, conforme especificado e modelado em [Documentações](https://github.com/Smart-AniMon/docs). 
 
-O `Server` é composto por 3 serviços: O sistema de processamento (processing), o serviço de aplicação web (application) e um banco de dados NoSQL (mongo). Além disso, são utilizados 2 serviços externos: Um servidor broker MQTT para receber as mensagens do componente módulo e a API do [Google Cloud Vision](https://cloud.google.com/vision) para consulta e identificação da Imagens recebidas do módulo.
+O `Server` é composto por 3 serviços: O sistema de processamento (processing), o serviço de aplicação web (application) e um banco de dados NoSQL (mongo). Além disso, são utilizados 2 serviços externos: Um servidor broker MQTT para receber as mensagens do componente módulo e a API do [Google Cloud Vision](https://cloud.google.com/vision) para identificação da imagens recebidas do módulo.
 
 A seguir você encontrará instruções de como implementar os três serviços utilizando composição de contêineres. Para mais detalhes de como executar os serviços separadamente, consulte [processing](https://github.com/Smart-AniMon/server/tree/main/processing) ou [application](https://github.com/Smart-AniMon/server/tree/main/application).
 
 
 # Instalação
 
-## Pré-requisitos
+## Requisitos
 
 * Servidor e acesso root.
     * RAM: 2 GB

@@ -1,16 +1,16 @@
 # Processing Service
 
-Este diretório contém todo o código fonte do serviço `processing` do Sistema AniMon. Este serviço precisa de uma conexão com um banco de dados NoSQL (MongoDB) para persistência das informações e também acessa 2 serviços externos: Um servidor broker MQTT para receber as mensagens do componente módulo e a API do [Google Cloud Vision](https://cloud.google.com/vision) para consulta e identificação da Imagens recebidas do módulo.
+Este diretório contém todo o código fonte do serviço `processing` do Sistema Smart AniMon. Este serviço precisa de uma conexão com um banco de dados NoSQL (MongoDB) para persistência das informações e também acessa 2 serviços externos: Um servidor broker MQTT para receber as mensagens do componente módulo e a API do [Google Cloud Vision](https://cloud.google.com/vision) para consulta e identificação da Imagens recebidas do módulo.
 
 A seguir você encontrará instruções de como executar o serviço localmente para desenvolvimento.
 
 # Instalação
 
-## Pré-requisitos
+## Requisitos
 
 * Git.
 * Python 3.7 ou superior
-* Credenciais para leitura e escrita em um servidor MongoDB.
+* Credenciais para leitura e escrita em uma base MongoDB.
 * Credenciais de um broker MQTT.
 * Credenciais para consulta na API do [Google Cloud Vision](https://cloud.google.com/vision/docs/quickstart-client-libraries). 
 
@@ -71,9 +71,9 @@ A seguir você encontrará instruções de como executar o serviço localmente p
     $ python src/principal.py
     ```
 
-2. No diretório `./tests` existem alguns scripts para testar partes diferentes do sistema. Por exemplo, para testar a leitura de uma mensagem no tópico do Broker MQTT configurado, execute o seguinte script:
+2. No diretório `./tests` existem alguns scripts para testar partes diferentes do serviço. Por exemplo, para testar a leitura de uma mensagem no tópico do Broker MQTT configurado, execute o seguinte script:
     ```bash
     $ python tests/test_mqtt.py
     ```
 
-**Obs.:** O sistema `processing` implementa somente um client MQTT para consumir as mensagens do tópico. Mas é possível simular o envio de uma mensagem para o tópico executando o script `./tests/pub.py`.
+**Obs.:** O serviço `processing` implementa somente um client MQTT para consumir as mensagens do tópico. Mas é possível simular o envio de uma mensagem para o tópico executando o script `./tests/pub.py`.
