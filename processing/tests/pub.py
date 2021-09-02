@@ -5,6 +5,7 @@ from settings import MQTT_BROKER
 import json
 import io, os, base64
 import datetime
+from datetime import timedelta
 
 
 
@@ -31,7 +32,7 @@ for img in images:
       image_bytes = image_file.read()
       image_base64 = base64.b64encode(image_bytes)
 
-   datetime_object = datetime.datetime.now()
+   datetime_object = datetime.datetime.now() - timedelta(days=2)
    message = {
       "id": "module" + str(i),
       "image": image_base64.decode('utf-8'),
