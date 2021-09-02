@@ -1,12 +1,9 @@
 import os
 
-####### FIM das Variáveis da aplicação. #######
+####### Início das Variáveis da aplicação. #######
 # Se for usar contêiner é possível configurar como variáveis de ambiente.
 
 PRODUCTION = True
-LOGGING_LEVEL = 'INFO'
-APP_PATH = '/animon/processing'
-RESOURCES_PATH = APP_PATH + '/resources'
 
 # Configurar informações de conexão com o broker
 BROKER_HOST = 'Ip ou Host do Broker (ex. 127.0.0.1)'
@@ -39,6 +36,9 @@ SCORE_ALL_LABELS = 60.00
 ###############################################
 ##### Não alterar as configurações abaixo. ####
 # Altere somente para adicionar funcionalidades ou mudar algum comportamento
+LOGGING_LEVEL = 'INFO'
+APP_PATH = '/animon/processing'
+RESOURCES_PATH = APP_PATH + '/resources'
 
 if not PRODUCTION:
 	LOGGING_LEVEL = 'DEBUG'
